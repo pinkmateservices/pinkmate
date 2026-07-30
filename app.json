@@ -38,12 +38,7 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      "expo-secure-store",
-        {
-          "configureAndroidBackup": true,
-          "faceIDPermission": "Allow Pinkmate to access your Face ID biometric data."
-        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,3 +1,10 @@
+/**
+ * Theme values mirror the CSS custom properties defined in app/global.css.
+ * CSS variables are the source of truth for Tailwind/NativeWind class usage.
+ * This file provides the same values for inline styles and icon color props
+ * that cannot use CSS variables in React Native.
+ */
+
 export const colors = {
   primary: '#EC4899',
   primaryLight: '#F472B6',
