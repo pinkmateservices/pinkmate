@@ -22,10 +22,18 @@ export const CategoryCard = ({ category, onPress, variant = 'grid' }: CategoryCa
         className="items-center mr-4"
       >
         <View
-          className="w-16 h-16 rounded-xl items-center justify-center mb-2"
+          className="w-16 h-16 rounded overflow-hidden items-center justify-center mb-2"
           style={{ backgroundColor: '#FDF2F8' }}
         >
-          <Text className="text-2xl">{category.name.charAt(0)}</Text>
+          {category.image ? (
+            <Image
+              source={{ uri: category.image }}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+            />
+          ) : (
+            <Text className="text-2xl">{category.name.charAt(0)}</Text>
+          )}
         </View>
         <Text className="text-gray-700 text-xs font-medium text-center" numberOfLines={1}>
           {category.name}
@@ -42,14 +50,14 @@ export const CategoryCard = ({ category, onPress, variant = 'grid' }: CategoryCa
       style={{ width: CARD_WIDTH }}
     >
       <View
-        className="bg-white rounded-xl overflow-hidden"
+        className="bg-white rounded overflow-hidden"
         style={shadows.md}
       >
         <View className="h-28 bg-pink-50 items-center justify-center">
           {category.image ? (
             <Image
               source={{ uri: category.image }}
-              className="w-full h-full"
+              style={{ width: '100%', height: '100%' }}
               contentFit="cover"
             />
           ) : (
@@ -71,7 +79,7 @@ export const CategoryCard = ({ category, onPress, variant = 'grid' }: CategoryCa
 
 export const CategoryCardSkeleton = () => (
   <View className="mb-4" style={{ width: CARD_WIDTH }}>
-    <View className="bg-white rounded-xl overflow-hidden" style={shadows.md}>
+    <View className="bg-white rounded overflow-hidden" style={shadows.md}>
       <Skeleton height={112} />
       <View className="p-3">
         <Skeleton width="70%" height={16} className="mb-1" />
