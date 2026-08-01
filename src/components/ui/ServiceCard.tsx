@@ -1,57 +1,77 @@
-import { View, Text, TouchableOpacity, Dimensions, StyleSheet } from 'react-native'
-import { Image } from 'expo-image'
-import { LinearGradient } from 'expo-linear-gradient'
-import Animated, { FadeInDown } from 'react-native-reanimated'
-import { colors, borderRadius, typography, shadows } from '../../config/theme'
-import { Star, Clock } from 'lucide-react-native'
-import { Service } from '../../types'
-import { FavoriteButton } from '../ui/FavoriteButton'
-import { Skeleton } from '../ui/Skeleton'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  StyleSheet,
+} from "react-native";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { colors, borderRadius, typography, shadows } from "../../config/theme";
+import { Star, Clock } from "lucide-react-native";
+import { Service } from "../../types";
+import { FavoriteButton } from "../ui/FavoriteButton";
+import { Skeleton } from "../ui/Skeleton";
+import { Button } from "./Button";
 
-const { width } = Dimensions.get('window')
-const GRID_CARD_WIDTH = (width - 48) / 2
-const H_CARD_WIDTH = width * 0.58
+const { width } = Dimensions.get("window");
+const GRID_CARD_WIDTH = (width - 48) / 2;
+const H_CARD_WIDTH = width * 0.58;
 
 interface ServiceCardProps {
-  service: Service
-  onPress: () => void
-  onBookNow?: () => void
-  index?: number
-  horizontal?: boolean
+  service: Service;
+  onPress: () => void;
+  onBookNow?: () => void;
+  index?: number;
+  horizontal?: boolean;
 }
 
 function RatingRow({ service }: { service: Service }) {
   return (
     <View style={styles.ratingRow}>
       <Star size={12} color={colors.accent} fill={colors.accent} />
-      <Text style={styles.ratingText}>
-        {service.rating?.toFixed(1) ?? '—'}
-      </Text>
+      <Text style={styles.ratingText}>{service.rating?.toFixed(1) ?? "—"}</Text>
       {!!service.reviewCount && (
         <Text style={styles.reviewText}>
-          ({service.reviewCount >= 1000
+          (
+          {service.reviewCount >= 1000
             ? `${(service.reviewCount / 1000).toFixed(1)}k`
-            : service.reviewCount})
+            : service.reviewCount}
+          )
         </Text>
       )}
       <View style={styles.dot} />
       <Clock size={11} color={colors.textTertiary} />
       <Text style={styles.durationText}>{service.duration} min</Text>
     </View>
-  )
+  );
 }
 
 // ── Grid card (2-col layout) ──────────────────────────────────
-export const ServiceCard = ({ service, onPress, index = 0, horizontal }: ServiceCardProps) => {
-  const price = service.discountPrice && service.discountPrice < service.basePrice
-    ? service.discountPrice : service.basePrice
-  const hasDiscount = service.discountPrice && service.discountPrice < service.basePrice
+export const ServiceCard = ({
+  service,
+  onPress,
+  index = 0,
+  horizontal,
+}: ServiceCardProps) => {
+  const price =
+    service.discountPrice && service.discountPrice < service.basePrice
+      ? service.discountPrice
+      : service.basePrice;
+  const hasDiscount =
+    service.discountPrice && service.discountPrice < service.basePrice;
   const discountPct = hasDiscount
-    ? Math.round(((service.basePrice - service.discountPrice!) / service.basePrice) * 100)
-    : 0
+    ? Math.round(
+        ((service.basePrice - service.discountPrice!) / service.basePrice) *
+          100,
+      )
+    : 0;
 
-  const Container = horizontal ? View : Animated.View
-  const animProps = horizontal ? {} : { entering: FadeInDown.delay(index * 80).duration(400) }
+  const Container = horizontal ? View : Animated.View;
+  const animProps = horizontal
+    ? {}
+    : { entering: FadeInDown.delay(index * 80).duration(400) };
 
   return (
     <Container {...animProps}>
@@ -69,7 +89,7 @@ export const ServiceCard = ({ service, onPress, index = 0, horizontal }: Service
             transition={300}
           />
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.55)']}
+            colors={["transparent", "rgba(0,0,0,0.55)"]}
             style={StyleSheet.absoluteFillObject}
           />
           {/* Top row badges */}
@@ -78,7 +98,9 @@ export const ServiceCard = ({ service, onPress, index = 0, horizontal }: Service
               <View style={styles.typePill}>
                 <Text style={styles.typePillText}>{service.serviceType}</Text>
               </View>
-            ) : <View />}
+            ) : (
+              <View />
+            )}
             <FavoriteButton serviceId={service.id} />
           </View>
           {/* Discount badge */}
@@ -91,7 +113,9 @@ export const ServiceCard = ({ service, onPress, index = 0, horizontal }: Service
 
         {/* Content */}
         <View style={styles.gridContent}>
-          <Text style={styles.name} numberOfLines={1}>{service.name}</Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {service.name}
+          </Text>
           <View style={styles.priceRow}>
             <Text style={styles.price}>₹{price}</Text>
             {hasDiscount && (
@@ -102,14 +126,23 @@ export const ServiceCard = ({ service, onPress, index = 0, horizontal }: Service
         </View>
       </TouchableOpacity>
     </Container>
-  )
-}
+  );
+};
 
 // ── Horizontal card (home screen sections) ────────────────────
-export const ServiceCardHorizontal = ({ service, onPress }: { service: Service; onPress: () => void }) => {
-  const price = service.discountPrice && service.discountPrice < service.basePrice
-    ? service.discountPrice : service.basePrice
-  const hasDiscount = service.discountPrice && service.discountPrice < service.basePrice
+export const ServiceCardHorizontal = ({
+  service,
+  onPress,
+}: {
+  service: Service;
+  onPress: () => void;
+}) => {
+  const price =
+    service.discountPrice && service.discountPrice < service.basePrice
+      ? service.discountPrice
+      : service.basePrice;
+  const hasDiscount =
+    service.discountPrice && service.discountPrice < service.basePrice;
 
   return (
     <TouchableOpacity
@@ -125,7 +158,7 @@ export const ServiceCardHorizontal = ({ service, onPress }: { service: Service; 
           transition={300}
         />
         <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.45)']}
+          colors={["transparent", "rgba(0,0,0,0.45)"]}
           style={StyleSheet.absoluteFillObject}
         />
         <View style={styles.hTopRow}>
@@ -139,7 +172,9 @@ export const ServiceCardHorizontal = ({ service, onPress }: { service: Service; 
       </View>
 
       <View style={styles.hContent}>
-        <Text style={styles.name} numberOfLines={1}>{service.name}</Text>
+        <Text style={styles.name} numberOfLines={1}>
+          {service.name}
+        </Text>
         <View style={styles.priceRow}>
           <Text style={styles.price}>₹{price}</Text>
           {hasDiscount && (
@@ -148,9 +183,13 @@ export const ServiceCardHorizontal = ({ service, onPress }: { service: Service; 
         </View>
         <RatingRow service={service} />
       </View>
+      {/* TODO : Implment add to cart */}
+      <View className="px-2 pb-2">
+        <Button size="sm" title="Add to cart" onPress={() => {}} />
+      </View>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 // ── Skeleton ──────────────────────────────────────────────────
 export const ServiceCardSkeleton = () => (
@@ -162,7 +201,7 @@ export const ServiceCardSkeleton = () => (
       <Skeleton width="60%" height={11} borderRadiusVal={borderRadius.sm} />
     </View>
   </View>
-)
+);
 
 const styles = StyleSheet.create({
   // Grid card
@@ -170,7 +209,7 @@ const styles = StyleSheet.create({
     width: GRID_CARD_WIDTH,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   gridImageContainer: {
     width: GRID_CARD_WIDTH,
@@ -186,7 +225,7 @@ const styles = StyleSheet.create({
     width: H_CARD_WIDTH,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginRight: 12,
   },
   hImageContainer: {
@@ -198,27 +237,27 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   hTopRow: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     left: 8,
     right: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   // Shared
   topRow: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     left: 8,
     right: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   typePill: {
-    backgroundColor: 'rgba(236,72,153,0.85)',
+    backgroundColor: "rgba(236,72,153,0.85)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: borderRadius.full,
@@ -226,10 +265,10 @@ const styles = StyleSheet.create({
   typePillText: {
     color: colors.white,
     fontSize: typography.tiny,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   discountBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 8,
     left: 8,
     backgroundColor: colors.success,
@@ -240,37 +279,37 @@ const styles = StyleSheet.create({
   discountText: {
     color: colors.white,
     fontSize: typography.tiny,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   name: {
     fontSize: typography.bodySmall,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
   },
   priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 5,
   },
   price: {
     fontSize: typography.body,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.primary,
   },
   originalPrice: {
     fontSize: typography.caption,
     color: colors.textTertiary,
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
   },
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 3,
     marginTop: 1,
   },
   ratingText: {
     fontSize: typography.caption,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
   },
   reviewText: {
@@ -288,4 +327,4 @@ const styles = StyleSheet.create({
     fontSize: typography.caption,
     color: colors.textSecondary,
   },
-})
+});
