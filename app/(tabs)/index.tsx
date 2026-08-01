@@ -4,7 +4,9 @@ import {
   ScrollView,
   RefreshControl,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography } from "../../src/config/theme";
@@ -30,8 +32,6 @@ import { useState, useCallback, useMemo } from "react";
 import {
   MapPin,
   Sparkles,
-  TrendingUp,
-  Award,
   ChevronRight,
 } from "lucide-react-native";
 
@@ -60,14 +60,6 @@ export default function HomeScreen() {
     [allServices],
   );
 
-  const featuredServices = useMemo(
-    () =>
-      allServices
-        ?.filter((s) => s.featured && s.status === "Active")
-        .slice(0, 6) || [],
-    [allServices],
-  );
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     setRefreshing(false);
@@ -89,14 +81,33 @@ export default function HomeScreen() {
         }
       >
         <View className="px-6 pt-4 pb-2">
-          <View className="flex-row items-center mb-1">
-            <MapPin size={16} color={colors.primary} />
-            <Text
-              className="text-gray-500 ml-1.5"
-              style={{ fontSize: typography.caption }}
+          <View className="flex-row items-center justify-between mb-1">
+            <View className="flex-row items-center">
+              <MapPin size={16} color={colors.primary} />
+              <Text
+                className="text-gray-500 ml-1.5"
+                style={{ fontSize: typography.caption }}
+              >
+                {user?.city || "Current Location"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push('/profile')}
+              activeOpacity={0.8}
+              className="w-10 h-10 rounded-full bg-pink-100 items-center justify-center overflow-hidden"
             >
-              {user?.city || "Current Location"}
-            </Text>
+              {user?.photoURL ? (
+                <Image
+                  source={{ uri: user.photoURL }}
+                  style={{ width: 40, height: 40 }}
+                  contentFit="cover"
+                />
+              ) : (
+                <Text className="text-primary font-bold" style={{ fontSize: typography.body }}>
+                  {user?.fullName?.charAt(0).toUpperCase() || '?'}
+                </Text>
+              )}
+            </TouchableOpacity>
           </View>
           <Text
             className="text-gray-900 font-bold"
