@@ -9,6 +9,9 @@ export interface User {
   status: 'active' | 'inactive'
   totalBookings: number
   photoURL?: string
+  latitude?: number
+  longitude?: number
+  locationUpdatedAt?: number
   createdAt: number
   updatedAt: number
 }

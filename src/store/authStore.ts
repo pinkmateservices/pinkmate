@@ -34,11 +34,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   signIn: async (email, password) => {
     const user = await authService.signIn(email, password)
     set({ user, isAuthenticated: true, isGuest: false })
+    authService.updateUserLocation(user.id)
   },
 
   signUp: async (email, password, userData) => {
     const user = await authService.signUp(email, password, userData)
     set({ user, isAuthenticated: true, isGuest: false })
+    authService.updateUserLocation(user.id)
   },
 
   logout: async () => {
@@ -50,6 +52,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const user = await authService.getCurrentUser()
       set({ user, isAuthenticated: !!user, isLoading: false })
+      if (user) authService.updateUserLocation(user.id)
     } catch {
       set({ user: null, isAuthenticated: false, isLoading: false })
     }

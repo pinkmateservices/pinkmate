@@ -129,3 +129,23 @@ export const uploadProfilePhoto = async (userId: string, uri: string): Promise<s
   await updateUserProfile(userId, { photoURL: url })
   return url
 }
+
+/**
+ * Fetches the device's current GPS coordinates and saves them to the
+ * user's Firebase record. Call this after sign-in or when the app
+ * resumes, so the backend always has a fresh position for provider matching.
+ */
+export const updateUserLocation = async (userId: string): Promise<void> => {
+  try {
+    const { getCurrentCoordinates } = await import('../hooks/useLocation')
+    const coords = await getCurrentCoordinates()
+    if (!coords) return
+    await update(ref(database, `${DB_PATHS.USERS}/${userId}`), {
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      locationUpdatedAt: Date.now(),
+    })
+  } catch {
+    // Location is best-effort — don't break the auth flow
+  }
+}
