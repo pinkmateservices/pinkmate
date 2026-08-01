@@ -2,9 +2,11 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   RefreshControl,
   Dimensions,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -175,20 +177,20 @@ export default function HomeScreen() {
                 <ChevronRight size={14} color={colors.primary} />
               </View>
             </View>
-            <ScrollView
+            <FlatList
+              data={featuredCategories.slice(0, 6)}
               horizontal
               showsHorizontalScrollIndicator={false}
-              className="pl-6"
-            >
-              {featuredCategories.slice(0, 6).map((cat) => (
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingLeft: 24, paddingRight: 8 }}
+              renderItem={({ item }) => (
                 <CategoryCard
-                  key={cat.id}
-                  category={cat}
+                  category={item}
                   variant="horizontal"
-                  onPress={() => router.push(`/category/${cat.id}`)}
+                  onPress={() => router.push(`/category/${item.id}`)}
                 />
-              ))}
-            </ScrollView>
+              )}
+            />
           </View>
         )}
 
@@ -221,23 +223,20 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                 </View>
-                <ScrollView
+                <FlatList
+                  className={`${Platform.OS === "android" && "py-2"}`}
+                  data={popularServices.filter((service) => service.featured)}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  className="pl-6"
-                >
-                  {popularServices
-                    .filter((service) => service.featured)
-                    .map((service) => (
-                      <ServiceCardHorizontal
-                        key={service.id}
-                        service={service}
-                        onPress={() =>
-                          router.push(`/service-details/${service.id}`)
-                        }
-                      />
-                    ))}
-                </ScrollView>
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={{ paddingLeft: 24, paddingRight: 8 }}
+                  renderItem={({ item }) => (
+                    <ServiceCardHorizontal
+                      service={item}
+                      onPress={() => router.push(`/service-details/${item.id}`)}
+                    />
+                  )}
+                />
               </View>
             )}
           </>

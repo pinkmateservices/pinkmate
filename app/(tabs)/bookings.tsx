@@ -1,0 +1,165 @@
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native'
+import { useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import { colors, typography, shadows } from '../../src/config/theme'
+import { useBookings } from '../../src/hooks'
+import { EmptyState, Skeleton, Badge, Timeline } from '../../src/components/ui'
+import { Calendar, Clock, MapPin, ChevronRight } from 'lucide-react-native'
+import { useState, useMemo, useCallback } from 'react'
+import { Booking, BookingStatus } from '../../src/types'
+import { BOOKING_STATUS_FLOW } from '../../src/config/constants'
+
+const statusColors: Record<string, { bg: string; text: string }> = {
+  'Pending': { bg: '#FFFBEB', text: '#D97706' },
+  'Confirmed': { bg: '#EFF6FF', text: '#2563EB' },
+  'Partner Assigned': { bg: '#FDF2F8', text: '#DB2777' },
+  'On The Way': { bg: '#F0FDF4', text: '#059669' },
+  'Service Started': { bg: '#F0FDF4', text: '#059669' },
+  'Completed': { bg: '#ECFDF5', text: '#059669' },
+  'Cancelled': { bg: '#FEF2F2', text: '#DC2626' },
+}
+
+export default function BookingsScreen() {
+  const insets = useSafeAreaInsets()
+  const router = useRouter()
+  const { data: bookings, isLoading, refetch } = useBookings()
+  const [refreshing, setRefreshing] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await refetch()
+    setRefreshing(false)
+  }, [refetch])
+
+  const sortedBookings = useMemo(() => {
+    if (!bookings) return []
+    return [...bookings].sort((a, b) => b.createdAt - a.createdAt)
+  }, [bookings])
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
+        <View className="px-6 pt-4 pb-4">
+          <Skeleton width={120} height={28} />
+        </View>
+        <View className="px-4">
+          {[1, 2, 3].map((i) => (
+            <View key={i} className="bg-white rounded-xl p-4 mb-3" style={shadows.md}>
+              <Skeleton width="70%" height={18} className="mb-2" />
+              <Skeleton width="50%" height={14} className="mb-2" />
+              <Skeleton width="40%" height={14} />
+            </View>
+          ))}
+        </View>
+      </View>
+    )
+  }
+
+  return (
+    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
+      <View className="px-6 pt-4 pb-4">
+        <Text className="text-gray-900 font-bold" style={{ fontSize: typography.h1 }}>My Bookings</Text>
+      </View>
+
+      {sortedBookings.length === 0 ? (
+        <EmptyState
+          icon={<Calendar size={48} color={colors.primary} />}
+          title="No Bookings Yet"
+          description="Your booking history will appear here once you book a service."
+          action={
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)')}
+              className="bg-pink-500 px-6 py-3 rounded-xl"
+            >
+              <Text className="text-white font-semibold">Book a Service</Text>
+            </TouchableOpacity>
+          }
+        />
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          className="flex-1 px-4"
+        >
+          {sortedBookings.map((booking, index) => {
+            const sc = statusColors[booking.status] || statusColors['Pending']
+            const isExpanded = expandedId === booking.id
+
+            return (
+              <Animated.View
+                key={booking.id}
+                entering={FadeInDown.delay(index * 50).duration(400)}
+              >
+                <TouchableOpacity
+                  onPress={() => setExpandedId(isExpanded ? null : booking.id)}
+                  activeOpacity={0.7}
+                  className="bg-white rounded-xl p-4 mb-3"
+                  style={shadows.md}
+                >
+                  <View className="flex-row items-center justify-between mb-3">
+                    <Text className="text-gray-900 font-semibold flex-1" style={{ fontSize: typography.body }} numberOfLines={1}>
+                      {booking.items.map((i) => i.serviceName).join(', ')}
+                    </Text>
+                    <Badge
+                      label={booking.status}
+                      variant={
+                        booking.status === 'Completed' ? 'success' :
+                        booking.status === 'Cancelled' ? 'error' :
+                        booking.status === 'Pending' ? 'warning' : 'info'
+                      }
+                    />
+                  </View>
+
+                  <View className="flex-row items-center mb-2">
+                    <Calendar size={14} color={colors.textTertiary} />
+                    <Text className="text-gray-500 ml-2" style={{ fontSize: typography.caption }}>
+                      {booking.scheduledDate}
+                    </Text>
+                    <Clock size={14} color={colors.textTertiary} className="ml-4" />
+                    <Text className="text-gray-500 ml-2" style={{ fontSize: typography.caption }}>
+                      {booking.scheduledTime}
+                    </Text>
+                  </View>
+
+                  <View className="flex-row items-center mb-2">
+                    <MapPin size={14} color={colors.textTertiary} />
+                    <Text className="text-gray-500 ml-2" style={{ fontSize: typography.caption }} numberOfLines={1}>
+                      {booking.address?.fullAddress || 'Address not available'}
+                    </Text>
+                  </View>
+
+                  <View className="flex-row items-center justify-between mt-2 pt-3 border-t border-gray-100">
+                    <Text className="text-gray-900 font-bold" style={{ fontSize: typography.body }}>
+                      ₹{booking.finalAmount}
+                    </Text>
+                    <View className="flex-row items-center">
+                      <Text className="text-pink-500 font-medium mr-1" style={{ fontSize: typography.caption }}>
+                        View Details
+                      </Text>
+                      <ChevronRight size={14} color={colors.primary} />
+                    </View>
+                  </View>
+
+                  {isExpanded && booking.statusTimeline && (
+                    <View className="mt-4 pt-4 border-t border-gray-100" style={{ maxHeight: 300 }}>
+                      <Text className="text-gray-900 font-semibold mb-4" style={{ fontSize: typography.bodySmall }}>
+                        Booking Timeline
+                      </Text>
+                      <Timeline
+                        steps={booking.statusTimeline}
+                        allStatuses={BOOKING_STATUS_FLOW}
+                      />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            )
+          })}
+          <View className="h-8" />
+        </ScrollView>
+      )}
+    </View>
+  )
+}
