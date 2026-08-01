@@ -12,7 +12,7 @@ import { Image } from 'expo-image'
 export default function Index() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isAuthenticated, isGuest, isLoading, continueAsGuest } = useAuthStore()
 
   useEffect(() => {
     const hideSplash = async () => {
@@ -31,12 +31,17 @@ export default function Index() {
     )
   }
 
-  if (isAuthenticated) {
+  if (isAuthenticated || isGuest) {
     return <Redirect href="/(tabs)" />
   }
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <View className='w-full px-6 items-end'>
+        <TouchableOpacity onPress={continueAsGuest}>
+          <Text className='text-primary font-bold'>Skip</Text>
+        </TouchableOpacity>
+      </View>
       <View className="flex-1 items-center justify-center px-8">
         <Animated.View entering={FadeInDown.duration(800)} className="items-center mb-8">
           <View className="w-24 h-24 rounded-2xl bg-pink-100 items-center justify-center mb-6">

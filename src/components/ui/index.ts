@@ -13,3 +13,4 @@ export { ServiceCard, ServiceCardHorizontal, ServiceCardSkeleton } from './Servi
 export { SubCategoryCard, SubCategoryCardSkeleton } from './SubCategoryCard'
 export { BannerCarousel, BannerCarouselSkeleton } from './BannerCarousel'
 export { LocationPicker } from './LocationPicker'
+export { GuestBanner } from './GuestBanner'
