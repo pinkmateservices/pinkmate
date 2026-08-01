@@ -29,11 +29,7 @@ import {
   BannerCarouselSkeleton,
 } from "../../src/components/ui/BannerCarousel";
 import { useState, useCallback, useMemo } from "react";
-import {
-  MapPin,
-  Sparkles,
-  ChevronRight,
-} from "lucide-react-native";
+import { MapPin, Sparkles, ChevronRight } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -41,6 +37,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const isGuest = useAuthStore((s) => s.isGuest);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -92,7 +89,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => router.push('/profile')}
+              onPress={() => router.push("/profile")}
               activeOpacity={0.8}
               className="w-10 h-10 rounded-full bg-pink-100 items-center justify-center overflow-hidden"
             >
@@ -103,8 +100,13 @@ export default function HomeScreen() {
                   contentFit="cover"
                 />
               ) : (
-                <Text className="text-primary font-bold" style={{ fontSize: typography.body }}>
-                  {user?.fullName?.charAt(0).toUpperCase() || '?'}
+                <Text
+                  className="text-primary font-bold"
+                  style={{ fontSize: typography.body }}
+                >
+                  {isGuest
+                    ? "G"
+                    : user?.fullName?.charAt(0).toUpperCase() || "?"}
                 </Text>
               )}
             </TouchableOpacity>
@@ -119,7 +121,7 @@ export default function HomeScreen() {
             className="text-gray-900 font-bold"
             style={{ fontSize: typography.h1 }}
           >
-            {user?.fullName?.split(" ")[0] || "There"}
+            {isGuest ? "Guest" : user?.fullName?.split(" ")[0] || "There"}
           </Text>
         </View>
 

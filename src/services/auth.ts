@@ -1,4 +1,4 @@
-import { auth, database, storage } from '../config/firebase'
+import { auth, database } from '../config/firebase'
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -8,7 +8,6 @@ import {
   updateProfile,
   sendPasswordResetEmail,
 } from 'firebase/auth'
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { ref, set, get, update } from 'firebase/database'
 import { DB_PATHS } from '../config/constants'
 import { User } from '../types'
@@ -110,11 +109,23 @@ export const updateUserProfile = async (userId: string, data: Partial<User>) => 
 }
 
 export const uploadProfilePhoto = async (userId: string, uri: string): Promise<string> => {
-  const response = await fetch(uri)
-  const blob = await response.blob()
-  const fileRef = storageRef(storage, `profiles/${userId}/photo.jpg`)
-  await uploadBytes(fileRef, blob)
-  const url = await getDownloadURL(fileRef)
+  const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME
+  const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
+  const formData = new FormData()
+  formData.append('file', { uri, type: 'image/jpeg', name: 'photo.jpg' } as any)
+  formData.append('upload_preset', uploadPreset!)
+  formData.append('folder', 'pinkmate/profiles')
+  formData.append('public_id', `user_${userId}`)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) throw new Error('Upload failed')
+  const json = await res.json()
+  const url = json.secure_url as string
+
   await updateUserProfile(userId, { photoURL: url })
   return url
 }
