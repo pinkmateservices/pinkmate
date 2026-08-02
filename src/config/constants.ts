@@ -3,6 +3,7 @@ export const DB_PATHS = {
   CATEGORIES: 'categories',
   SUB_CATEGORIES: 'subCategories',
   SERVICES: 'services',
+  ADDONS: 'addons',
   BANNERS: 'banners',
   COUPONS: 'coupons',
   PARTNERS: 'partners',

@@ -16,6 +16,7 @@ export interface Service {
   status: 'Active' | 'Inactive'
   rating?: number
   reviewCount?: number
+  addOnIds?: string[]         // IDs of available add-ons for this service
   includedItems?: string[]
   excludedItems?: string[]
   preparationInstructions?: string[]

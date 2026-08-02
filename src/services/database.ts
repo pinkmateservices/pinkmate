@@ -5,6 +5,7 @@ import {
   Category,
   SubCategory,
   Service,
+  AddOn,
   Banner,
   Coupon,
   Booking,
@@ -182,4 +183,15 @@ export const fetchFavoriteIds = async (userId: string): Promise<string[]> => {
   if (!snapshot.exists()) return []
   const data = snapshot.val()
   return Object.keys(data).filter((key) => data[key] === true)
+}
+
+export const fetchAddOnsByIds = async (ids: string[]): Promise<AddOn[]> => {
+  if (!ids.length) return []
+  const results = await Promise.all(
+    ids.map(async (id) => {
+      const snap = await get(ref(database, `${DB_PATHS.ADDONS}/${id}`))
+      return snap.exists() ? ({ id, ...snap.val() } as AddOn) : null
+    })
+  )
+  return results.filter(Boolean) as AddOn[]
 }

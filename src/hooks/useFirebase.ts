@@ -165,3 +165,12 @@ export const useToggleFavorite = () => {
     mutationFn: (serviceId: string) => storeToggle(user!.id, serviceId),
   })
 }
+
+export const useAddOns = (ids: string[]) => {
+  return useQuery({
+    queryKey: ['addons', ids],
+    queryFn: () => db.fetchAddOnsByIds(ids),
+    enabled: ids.length > 0,
+    staleTime: 10 * 60 * 1000,
+  })
+}

@@ -6,7 +6,7 @@ import { Image } from "expo-image"
 import { LinearGradient } from "expo-linear-gradient"
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated"
 import { colors, typography, shadows, borderRadius } from "../../src/config/theme"
-import { useService, useServices } from "../../src/hooks"
+import { useService, useServices, useAddOns } from "../../src/hooks"
 import { useBookingStore } from "../../src/store"
 import { FavoriteButton, Skeleton } from "../../src/components/ui"
 import { ServiceCardHorizontal } from "../../src/components/ui/ServiceCard"
@@ -17,9 +17,11 @@ export default function ServiceDetailsScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { data: service, isLoading } = useService(id!)
-  const { addItem, removeItem, items } = useBookingStore()
+  const { addItem, removeItem, items, toggleAddOn } = useBookingStore()
 
   const { data: allServices } = useServices()
+  const addOnIds = service?.addOnIds ?? []
+  const { data: addOns = [] } = useAddOns(addOnIds)
   const relatedServices = useMemo(() => {
     if (!allServices || !service) return []
     return allServices
@@ -135,6 +137,41 @@ export default function ServiceDetailsScreen() {
           </Text>
         </Animated.View>
 
+        {/* ── Add-ons ── */}
+        {addOns.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(175).duration(400)} style={styles.card}>
+            <Text style={styles.sectionTitle}>Enhance your service</Text>
+            <Text style={[styles.bodyText, { marginBottom: 12 }]}>
+              Add extras to get more out of your session
+            </Text>
+            {addOns.filter((a) => a.status === 'Active').map((addOn) => {
+              const selected = cartItem?.selectedAddOns.find((a) => a.addOnId === addOn.id)
+              return (
+                <TouchableOpacity
+                  key={addOn.id}
+                  onPress={() => { if (qty === 0) addItem(service!); toggleAddOn(service!.id, addOn) }}
+                  activeOpacity={0.75}
+                  style={[styles.addOnRow, selected && styles.addOnRowSelected]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.addOnName, selected && { color: colors.primary }]}>{addOn.name}</Text>
+                    {addOn.description && (
+                      <Text style={styles.addOnDesc} numberOfLines={1}>{addOn.description}</Text>
+                    )}
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                      <Text style={styles.addOnPrice}>+₹{addOn.price}</Text>
+                      <Text style={styles.addOnDuration}>+{addOn.duration} min</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.addOnCheck, selected && styles.addOnCheckSelected]}>
+                    {selected && <Text style={{ color: colors.white, fontSize: 12, fontWeight: '700' }}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              )
+            })}
+          </Animated.View>
+        )}
+
         {/* ── Included ── */}
         {service.includedItems && service.includedItems.length > 0 && (
           <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.card}>
@@ -183,13 +220,23 @@ export default function ServiceDetailsScreen() {
       {/* ── Sticky bottom bar ── */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
         <View>
-          <Text style={styles.bottomPrice}>₹{price}</Text>
-          {hasDiscount && (
-            <Text style={styles.bottomSaved}>Save ₹{service.basePrice - price}</Text>
-          )}
+          {(() => {
+            const addOnTotal = cartItem?.selectedAddOns.reduce((s, a) => s + a.price, 0) ?? 0
+            const totalPrice = price + addOnTotal
+            return (
+              <>
+                <Text style={styles.bottomPrice}>₹{totalPrice}</Text>
+                {addOnTotal > 0 && (
+                  <Text style={styles.addOnTotalLabel}>incl. add-ons</Text>
+                )}
+                {hasDiscount && addOnTotal === 0 && (
+                  <Text style={styles.bottomSaved}>Save ₹{service.basePrice - price}</Text>
+                )}
+              </>
+            )
+          })()}
         </View>
 
-        {qty === 0 ? (
           <TouchableOpacity
             onPress={() => addItem(service)}
             activeOpacity={0.85}
@@ -198,25 +245,6 @@ export default function ServiceDetailsScreen() {
             <ShoppingBag size={18} color={colors.white} />
             <Text style={styles.bookBtnText}>Book Now</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={styles.qtyRow}>
-            <TouchableOpacity
-              onPress={() => removeItem(service.id)}
-              style={styles.qtyBtn}
-              activeOpacity={0.8}
-            >
-              <Minus size={16} color={colors.primary} />
-            </TouchableOpacity>
-            <Text style={styles.qtyText}>{qty}</Text>
-            <TouchableOpacity
-              onPress={() => addItem(service)}
-              style={[styles.qtyBtn, { backgroundColor: colors.primary }]}
-              activeOpacity={0.8}
-            >
-              <Plus size={16} color={colors.white} />
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
     </View>
   )
@@ -377,5 +405,57 @@ const styles = StyleSheet.create({
     color: colors.text,
     minWidth: 32,
     textAlign: 'center',
+  },
+  addOnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: borderRadius.lg,
+    padding: 12,
+    marginBottom: 10,
+    backgroundColor: colors.surface,
+  },
+  addOnRowSelected: {
+    borderColor: colors.primary,
+    backgroundColor: '#FDF2F8',
+  },
+  addOnName: {
+    fontSize: typography.bodySmall,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  addOnDesc: {
+    fontSize: typography.tiny,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
+  addOnPrice: {
+    fontSize: typography.caption,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  addOnDuration: {
+    fontSize: typography.caption,
+    color: colors.textSecondary,
+  },
+  addOnCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
+  },
+  addOnCheckSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  addOnTotalLabel: {
+    fontSize: typography.tiny,
+    color: colors.textTertiary,
+    marginTop: 2,
   },
 })
