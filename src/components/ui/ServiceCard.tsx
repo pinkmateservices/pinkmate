@@ -183,9 +183,9 @@ export const ServiceCardHorizontal = ({
         </View>
         <RatingRow service={service} />
       </View>
-      {/* TODO : Implment add to cart */}
+      {/* TODO : Implment Book Now */}
       <View className="px-2 pb-2">
-        <Button size="sm" title="Add to cart" onPress={() => {}} />
+        <Button size="sm" title="Book Now" onPress={() => {}} />
       </View>
     </TouchableOpacity>
   );

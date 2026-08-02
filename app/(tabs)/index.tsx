@@ -30,10 +30,55 @@ import {
   BannerCarousel,
   BannerCarouselSkeleton,
 } from "../../src/components/ui/BannerCarousel";
-import { useState, useCallback, useMemo } from "react";
-import { MapPin, Sparkles, ChevronRight } from "lucide-react-native";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { MapPin, Sparkles, ChevronRight, Star } from "lucide-react-native";
+import TestimonialsSection from "@/src/components/ui/Testimonial";
+import { Testimonial } from "@/src/types";
 
 const { width } = Dimensions.get("window");
+
+const TESTIMONIALS: Testimonial[] = [
+  {
+    id: "1",
+    name: "Priya Sharma",
+    location: "Mumbai",
+    rating: 5,
+    text: "Absolutely loved the facial service! The beautician was professional and my skin felt amazing after. Will definitely book again.",
+    avatar: "https://i.pravatar.cc/150?img=47",
+  },
+  {
+    id: "2",
+    name: "Ananya Gupta",
+    location: "Delhi",
+    rating: 5,
+    text: "Super convenient! Got a full body wax done at home. The hygiene was top-notch and the staff was very friendly.",
+    avatar: "https://i.pravatar.cc/150?img=48",
+  },
+  {
+    id: "3",
+    name: "Sneha Patel",
+    location: "Bangalore",
+    rating: 4,
+    text: "Great experience with the hair styling service. The stylist really understood what I wanted. Pricing is very reasonable.",
+    avatar: "https://i.pravatar.cc/150?img=44",
+  },
+  {
+    id: "4",
+    name: "Riya Mehta",
+    location: "Pune",
+    rating: 5,
+    text: "Pinkmate is my go-to app for all beauty needs. The nail art service was stunning — exactly what I had in mind!",
+    avatar: "https://i.pravatar.cc/150?img=45",
+  },
+  {
+    id: "5",
+    name: "Kavya Nair",
+    location: "Chennai",
+    rating: 5,
+    text: "Booked a bridal makeup package and it was perfect. The artist was on time and did an incredible job. Highly recommend!",
+    avatar: "https://i.pravatar.cc/150?img=46",
+  },
+];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -242,6 +287,9 @@ export default function HomeScreen() {
           </>
         )}
 
+        {/* Testimonials */}
+        <TestimonialsSection TESTIMONIALS={TESTIMONIALS} />
+
         {!catLoading &&
           !servicesLoading &&
           featuredCategories.length === 0 &&
@@ -254,6 +302,13 @@ export default function HomeScreen() {
           )}
 
         <View className="h-8" />
+
+        {/* Footer */}
+        <View className="items-center py-4">
+          <Text className="text-gray-400" style={{ fontSize: typography.caption }}>
+            Made with <Text className="text-primary">♥</Text> by Team Pinkmate
+          </Text>
+        </View>
       </ScrollView>
     </View>
   );
