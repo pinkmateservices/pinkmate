@@ -9,64 +9,88 @@ import { useAuthStore } from "@/src/store";
 import { getCurrentCoordinates } from "@/src/hooks/useLocation";
 import { updateUserProfile } from "@/src/services/auth";
 
-async function reverseGeocode(lat: number, lng: number): Promise<{ city?: string; state?: string }> {
+async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<{ city?: string; state?: string; address?: string }> {
   try {
+    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      { headers: { 'User-Agent': 'PinkmateApp/1.0' } }
-    )
-    const json = await res.json()
-    const addr = json.address ?? {}
+      `https://geocode.googleapis.com/v4/geocode/location?location.latitude=${lat}&location.longitude=${lng}&key=${apiKey}`,
+    );
+    const json = await res.json();
+    const result = json.results?.[0];
+    const components: { longText: string; types: string[] }[] =
+      result?.addressComponents ?? [];
+    const get = (type: string) =>
+      components.find((c) => c.types.includes(type))?.longText;
     return {
-      city: addr.city || addr.town || addr.village || addr.county,
-      state: addr.state,
-    }
+      city:
+        get("locality") ||
+        get("sublocality_level_1") ||
+        get("administrative_area_level_3"),
+      state: get("administrative_area_level_1"),
+      address: result?.formattedAddress,
+    };
   } catch {
-    return {}
+    return {};
   }
 }
 
 export default function TabLayout() {
-  const [isFetchingLocation, setIsFetchingLocation] = useState(true)
-  const { isAuthenticated, user, setUser } = useAuthStore()
+  const [isFetchingLocation, setIsFetchingLocation] = useState(true);
+  const { isAuthenticated, user, setUser } = useAuthStore();
 
   useEffect(() => {
     async function fetchAndUpdateLocation() {
       // Guests or unauthenticated skip location fetch
       if (!isAuthenticated || !user) {
-        setIsFetchingLocation(false)
-        return
+        setIsFetchingLocation(false);
+        return;
       }
 
       try {
-        const coords = await getCurrentCoordinates()
+        const coords = await getCurrentCoordinates();
         if (!coords) {
-          setIsFetchingLocation(false)
-          return
+          setIsFetchingLocation(false);
+          return;
         }
 
-        // Reverse geocode to get human-readable city/state
-        const { city, state } = await reverseGeocode(coords.latitude, coords.longitude)
+        // Reverse geocode to get human-readable city/state/address
+        const { city, state, address } = await reverseGeocode(
+          coords.latitude,
+          coords.longitude,
+        );
 
-        // Update Firebase + local store — only overwrite if we got a value
-        const updates: Record<string, any> = {
+        const updates: Partial<import('@/src/types').User> = {
           latitude: coords.latitude,
           longitude: coords.longitude,
           locationUpdatedAt: Date.now(),
+        };
+        if (city) updates.city = city;
+        if (state) updates.state = state;
+        if (city && state && address) {
+          updates.address = {
+            city,
+            state,
+            address,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            type: 'default',
+            updatedAt: Date.now(),
+          };
         }
-        if (city) updates.city = city
-        if (state) updates.state = state
-        await updateUserProfile(user.id, updates)
-        setUser({ ...user, ...updates })
+        await updateUserProfile(user.id, updates);
+        setUser({ ...user, ...updates });
       } catch {
         // Location is best-effort, never block the user
       } finally {
-        setIsFetchingLocation(false)
+        setIsFetchingLocation(false);
       }
     }
 
-    fetchAndUpdateLocation()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    fetchAndUpdateLocation();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isFetchingLocation) {
     return (
@@ -77,15 +101,21 @@ export default function TabLayout() {
       >
         <View className="w-20 h-20 rounded-2xl bg-pink-100 items-center justify-center mb-2">
           <Image
-            source={require('../../assets/images/logo.png')}
+            source={require("../../assets/images/logo.png")}
             style={{ width: 80, height: 80 }}
             contentFit="contain"
           />
         </View>
-        <Text className="text-gray-900 font-bold" style={{ fontSize: typography.h4 }}>
+        <Text
+          className="text-gray-900 font-bold"
+          style={{ fontSize: typography.h4 }}
+        >
           Just a moment...
         </Text>
-        <Text className="text-gray-400 text-center px-10" style={{ fontSize: typography.bodySmall }}>
+        <Text
+          className="text-gray-400 text-center px-10"
+          style={{ fontSize: typography.bodySmall }}
+        >
           Finding services near you
         </Text>
         <View className="flex-row gap-1.5 mt-2">
@@ -98,7 +128,7 @@ export default function TabLayout() {
           ))}
         </View>
       </Animated.View>
-    )
+    );
   }
 
   return (
@@ -135,7 +165,9 @@ export default function TabLayout() {
         name="bookings"
         options={{
           title: "Bookings",
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Calendar size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -153,5 +185,5 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-  )
+  );
 }

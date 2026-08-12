@@ -1,3 +1,13 @@
+export interface UserAddress {
+  city: string
+  state: string
+  address: string
+  latitude: number
+  longitude: number
+  type: 'default'
+  updatedAt: number
+}
+
 export interface User {
   id: string
   fullName: string
@@ -12,6 +22,7 @@ export interface User {
   latitude?: number
   longitude?: number
   locationUpdatedAt?: number
+  address?: UserAddress
   createdAt: number
   updatedAt: number
 }
