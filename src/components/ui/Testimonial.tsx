@@ -54,6 +54,7 @@ export default function TestimonialsSection({
         What our customers say
       </Text>
       <FlatList
+        className="pb-2"
         ref={flatRef}
         data={TESTIMONIALS}
         horizontal
