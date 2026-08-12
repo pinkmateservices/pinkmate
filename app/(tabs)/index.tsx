@@ -30,10 +30,12 @@ import {
   BannerCarousel,
   BannerCarouselSkeleton,
 } from "../../src/components/ui/BannerCarousel";
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { MapPin, Sparkles, ChevronRight, Star } from "lucide-react-native";
+import { useState, useCallback, useMemo } from "react";
+import { MapPin, Sparkles, ChevronRight } from "lucide-react-native";
 import TestimonialsSection from "@/src/components/ui/Testimonial";
 import { Testimonial } from "@/src/types";
+import LocationPickerModal from "@/src/components/ui/LocationPickerModal";
+import { updateUserProfile } from "@/src/services/auth";
 
 const { width } = Dimensions.get("window");
 
@@ -85,8 +87,10 @@ export default function HomeScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isGuest = useAuthStore((s) => s.isGuest);
+  const setUser = useAuthStore((s) => s.setUser);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
 
   const { data: categories, isLoading: catLoading } = useCategories();
   const { data: banners, isLoading: bannerLoading } = useBanners();
@@ -109,6 +113,32 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, []);
 
+  const handleLocationConfirm = useCallback(
+    async (location: { latitude: number; longitude: number; address: string; city?: string; state?: string }) => {
+      if (!user) return;
+      const updates = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        locationUpdatedAt: Date.now(),
+        ...(location.city && { city: location.city }),
+        ...(location.state && { state: location.state }),
+        address: {
+          city: location.city ?? "",
+          state: location.state ?? "",
+          address: location.address,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          type: "default" as const,
+          updatedAt: Date.now(),
+        },
+      };
+      await updateUserProfile(user.id, updates);
+      setUser({ ...user, ...updates });
+      setLocationModalVisible(false);
+    },
+    [user, setUser],
+  );
+
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -126,7 +156,11 @@ export default function HomeScreen() {
       >
         <View className="px-6 pt-4 pb-2">
           <View className="flex-row items-center justify-between mb-1">
-            <View className="flex-row items-center">
+            <TouchableOpacity
+              className="flex-row items-center"
+              onPress={() => !isGuest && setLocationModalVisible(true)}
+              activeOpacity={isGuest ? 1 : 0.7}
+            >
               <MapPin size={16} color={colors.primary} />
               <Text
                 className="text-gray-500 ml-1.5"
@@ -134,7 +168,7 @@ export default function HomeScreen() {
               >
                 {user?.city || "Current Location"}
               </Text>
-            </View>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push("/profile")}
               activeOpacity={0.8}
@@ -310,6 +344,14 @@ export default function HomeScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      <LocationPickerModal
+        visible={locationModalVisible}
+        initialLatitude={user?.latitude}
+        initialLongitude={user?.longitude}
+        onConfirm={handleLocationConfirm}
+        onClose={() => setLocationModalVisible(false)}
+      />
     </View>
   );
 }
