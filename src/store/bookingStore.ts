@@ -59,13 +59,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   addItem: (service) =>
     set((state) => {
       const existing = state.items.find((i) => i.serviceId === service.id)
-      if (existing) {
-        return {
-          items: state.items.map((i) =>
-            i.serviceId === service.id ? { ...i, quantity: i.quantity + 1 } : i
-          ),
-        }
-      }
+      if (existing) return state // already in cart, don't increment
       return {
         items: [
           ...state.items,

@@ -12,7 +12,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, typography } from "../../src/config/theme";
-import { useAuthStore } from "../../src/store";
+import { useAuthStore, useBookingStore } from "../../src/store";
 import {
   useCategories,
   useBanners,
@@ -25,6 +25,8 @@ import {
   ServiceCardHorizontal,
   Skeleton,
   EmptyState,
+  CartBar,
+  CartIcon,
 } from "../../src/components/ui";
 import {
   BannerCarousel,
@@ -88,6 +90,7 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const isGuest = useAuthStore((s) => s.isGuest);
   const setUser = useAuthStore((s) => s.setUser);
+  const addItem = useBookingStore((s) => s.addItem);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [locationModalVisible, setLocationModalVisible] = useState(false);
@@ -169,28 +172,31 @@ export default function HomeScreen() {
                 {user?.city || "Current Location"}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/profile")}
-              activeOpacity={0.8}
-              className="w-10 h-10 rounded-full bg-pink-100 items-center justify-center overflow-hidden"
-            >
-              {user?.photoURL ? (
-                <Image
-                  source={{ uri: user.photoURL }}
-                  style={{ width: 40, height: 40 }}
-                  contentFit="cover"
-                />
-              ) : (
-                <Text
-                  className="text-primary font-bold"
-                  style={{ fontSize: typography.body }}
-                >
-                  {isGuest
-                    ? "G"
-                    : user?.fullName?.charAt(0).toUpperCase() || "?"}
-                </Text>
-              )}
-            </TouchableOpacity>
+          <View className="flex-row items-center gap-3">
+              <CartIcon />
+              <TouchableOpacity
+                onPress={() => router.push("/profile")}
+                activeOpacity={0.8}
+                className="w-10 h-10 rounded-full bg-pink-100 items-center justify-center overflow-hidden"
+              >
+                {user?.photoURL ? (
+                  <Image
+                    source={{ uri: user.photoURL }}
+                    style={{ width: 40, height: 40 }}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <Text
+                    className="text-primary font-bold"
+                    style={{ fontSize: typography.body }}
+                  >
+                    {isGuest
+                      ? "G"
+                      : user?.fullName?.charAt(0).toUpperCase() || "?"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
           <Text
             className="text-gray-900 font-bold"
@@ -313,6 +319,10 @@ export default function HomeScreen() {
                     <ServiceCardHorizontal
                       service={item}
                       onPress={() => router.push(`/service-details/${item.id}`)}
+                      onBookNow={() => {
+                        addItem(item);
+                        router.push("/booking");
+                      }}
                     />
                   )}
                 />
@@ -352,6 +362,8 @@ export default function HomeScreen() {
         onConfirm={handleLocationConfirm}
         onClose={() => setLocationModalVisible(false)}
       />
+
+      <CartBar />
     </View>
   );
 }

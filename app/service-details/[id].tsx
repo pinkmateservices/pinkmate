@@ -8,8 +8,9 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated"
 import { colors, typography, shadows, borderRadius } from "../../src/config/theme"
 import { useService, useServices, useAddOns } from "../../src/hooks"
 import { useBookingStore } from "../../src/store"
-import { FavoriteButton, Skeleton } from "../../src/components/ui"
+import { FavoriteButton, Skeleton, CartBar } from "../../src/components/ui"
 import { ServiceCardHorizontal } from "../../src/components/ui/ServiceCard"
+import { CartIcon } from "../../src/components/ui/CartIcon"
 import { ArrowLeft, Clock, MapPin, Star, CheckCircle, XCircle, ShoppingBag, Plus, Minus } from "lucide-react-native"
 
 export default function ServiceDetailsScreen() {
@@ -80,7 +81,10 @@ export default function ServiceDetailsScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
               <ArrowLeft size={20} color={colors.white} />
             </TouchableOpacity>
-            <FavoriteButton serviceId={service.id} size={22} />
+            <View className="flex-row items-center gap-2">
+              <CartIcon color={colors.white} size={22} />
+              <FavoriteButton serviceId={service.id} size={22} />
+            </View>
           </View>
 
           {/* Bottom overlay info */}
@@ -217,6 +221,9 @@ export default function ServiceDetailsScreen() {
         )}
       </ScrollView>
 
+      {/* ── Cart bar ── */}
+      <CartBar serviceDetails />
+
       {/* ── Sticky bottom bar ── */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
         <View>
@@ -238,7 +245,10 @@ export default function ServiceDetailsScreen() {
         </View>
 
           <TouchableOpacity
-            onPress={() => addItem(service)}
+            onPress={() => {
+              addItem(service)
+              router.push("/booking")
+            }}
             activeOpacity={0.85}
             style={styles.bookBtn}
           >

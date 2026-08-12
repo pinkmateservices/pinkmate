@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import * as db from '../services/database'
 import * as mutations from '../services/mutations'
 import { useAuthStore } from '../store'
 import { useFavoritesStore } from '../store/favoritesStore'
 import { fetchFavoriteIds } from '../services/database'
+import type { Booking } from '../types'
 
 export const useCategories = () => {
   return useQuery({
@@ -82,19 +84,40 @@ export const useCouponByCode = (code: string) => {
 
 export const useBookings = () => {
   const user = useAuthStore((s) => s.user)
-  return useQuery({
-    queryKey: ['bookings', user?.id],
-    queryFn: () => db.fetchBookings(user!.id),
-    enabled: !!user,
-  })
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user?.id) return
+    setLoading(true)
+    const unsubscribe = db.subscribeBookings(user.id, (data) => {
+      setBookings(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [user?.id])
+
+  // refetch is a no-op — data is always live via the real-time listener
+  const refetch = () => Promise.resolve()
+
+  return { data: bookings, isLoading: loading, refetch }
 }
 
 export const useBooking = (bookingId: string) => {
-  return useQuery({
-    queryKey: ['bookings', bookingId],
-    queryFn: () => db.fetchBookingById(bookingId),
-    enabled: !!bookingId,
-  })
+  const [booking, setBooking] = useState<Booking | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!bookingId) return
+    setLoading(true)
+    const unsubscribe = db.subscribeBooking(bookingId, (data) => {
+      setBooking(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [bookingId])
+
+  return { data: booking, isLoading: loading }
 }
 
 export const useAddresses = () => {

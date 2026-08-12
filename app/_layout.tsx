@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '../src/store'
 import { onAuthChanged, getCurrentUser, getCachedUser } from '../src/services/auth'
@@ -20,6 +20,15 @@ const queryClient = new QueryClient({
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore()
+  const splashHidden = useRef(false)
+
+  const hideSplash = async () => {
+    if (splashHidden.current) return
+    splashHidden.current = true
+    try {
+      await SplashScreen.hideAsync()
+    } catch {}
+  }
 
   useEffect(() => {
     // Load cached user immediately so the app doesn't flash to login on restart
@@ -39,9 +48,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         setUser(null)
       }
       setLoading(false)
-      try {
-        await SplashScreen.hideAsync()
-      } catch {}
+      await hideSplash()
     })
 
     return unsubscribe
@@ -63,6 +70,7 @@ export default function RootLayout() {
           <Stack.Screen name="services/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="service-details/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="booking/index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="booking" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
           <Stack.Screen name="orders/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack>
       </AuthGate>

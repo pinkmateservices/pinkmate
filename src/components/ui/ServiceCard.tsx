@@ -133,9 +133,11 @@ export const ServiceCard = ({
 export const ServiceCardHorizontal = ({
   service,
   onPress,
+  onBookNow,
 }: {
   service: Service;
   onPress: () => void;
+  onBookNow?: () => void;
 }) => {
   const price =
     service.discountPrice && service.discountPrice < service.basePrice
@@ -183,9 +185,8 @@ export const ServiceCardHorizontal = ({
         </View>
         <RatingRow service={service} />
       </View>
-      {/* TODO : Implment Book Now */}
       <View className="px-2 pb-2">
-        <Button size="sm" title="Book Now" onPress={() => {}} />
+        <Button size="sm" title="Book Now" onPress={onBookNow ?? onPress} />
       </View>
     </TouchableOpacity>
   );
