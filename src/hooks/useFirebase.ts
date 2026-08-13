@@ -5,7 +5,7 @@ import * as mutations from '../services/mutations'
 import { useAuthStore } from '../store'
 import { useFavoritesStore } from '../store/favoritesStore'
 import { fetchFavoriteIds } from '../services/database'
-import type { Booking, Review } from '../types'
+import type { Booking, Review, Partner } from '../types'
 import type { SubmitReviewInput } from '../services/mutations'
 
 export const useCategories = () => {
@@ -215,6 +215,28 @@ export const usePartnerById = (partnerId: string) => {
   })
 }
 
+/**
+ * Live partner subscription. Unlike `usePartnerById` (a one-shot fetch), this
+ * keeps the partner node in sync — including the live `currentLocation` the
+ * partner app writes while online — so the booking screen can track movement.
+ */
+export const useLivePartner = (partnerId: string) => {
+  const [partner, setPartner] = useState<Partner | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!partnerId) return
+    setLoading(true)
+    const unsubscribe = db.subscribePartner(partnerId, (data) => {
+      setPartner(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [partnerId])
+
+  return { data: partner, isLoading: loading }
+}
+
 export const useSubmitReview = () => {
   const queryClient = useQueryClient()
 
@@ -232,5 +254,49 @@ export const useSubmitReview = () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', 'booking', variables.bookingId] })
       queryClient.invalidateQueries({ queryKey: ['partners', variables.partnerId] })
     },
+  })
+}
+
+// ── Chat ─────────────────────────────────────────────────────
+
+export const useConversationMessages = (conversationId: string) => {
+  const [messages, setMessages] = useState<db.ChatMessage[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!conversationId) return
+    setLoading(true)
+    const unsubscribe = db.subscribeConversationMessages(conversationId, (data) => {
+      setMessages(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [conversationId])
+
+  return { messages, loading }
+}
+
+/** Send a message as the current customer. */
+export const useSendChatMessage = () => {
+  const user = useAuthStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: ({ bookingId, text, partnerId }: { bookingId: string; text: string; partnerId: string }) =>
+      mutations.sendChatMessage(bookingId, {
+        senderId: user!.id,
+        senderType: 'user',
+        text,
+        participants: { userId: user!.id, partnerId },
+      }),
+  })
+}
+
+/** Best-effort: mark the partner's messages as read. */
+export const useMarkConversationRead = () => {
+  const user = useAuthStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      mutations.markConversationMessagesRead(conversationId, user!.id),
   })
 }

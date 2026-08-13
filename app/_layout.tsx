@@ -70,6 +70,8 @@ export default function RootLayout() {
           <Stack.Screen name="services/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="service-details/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="booking/index" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="booking/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name="booking/chat/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="booking" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
           <Stack.Screen name="orders/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack>

@@ -4,28 +4,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { colors, typography, shadows } from '../../src/config/theme'
 import { useBookings } from '../../src/hooks'
-import { EmptyState, Skeleton, Badge, Timeline, RatePartnerModal } from '../../src/components/ui'
+import { EmptyState, Skeleton, Badge, RatePartnerModal } from '../../src/components/ui'
 import { Calendar, Clock, MapPin, ChevronRight, Star } from 'lucide-react-native'
 import { useState, useMemo, useCallback } from 'react'
-import { Booking, BookingStatus } from '../../src/types'
-import { BOOKING_STATUS_FLOW } from '../../src/config/constants'
-
-const statusColors: Record<string, { bg: string; text: string }> = {
-  'Pending': { bg: '#FFFBEB', text: '#D97706' },
-  'Confirmed': { bg: '#EFF6FF', text: '#2563EB' },
-  'Partner Assigned': { bg: '#FDF2F8', text: '#DB2777' },
-  'On The Way': { bg: '#F0FDF4', text: '#059669' },
-  'Service Started': { bg: '#F0FDF4', text: '#059669' },
-  'Completed': { bg: '#ECFDF5', text: '#059669' },
-  'Cancelled': { bg: '#FEF2F2', text: '#DC2626' },
-}
+import { Booking } from '../../src/types'
 
 export default function BookingsScreen() {
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { data: bookings, isLoading, refetch } = useBookings()
   const [refreshing, setRefreshing] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [reviewTarget, setReviewTarget] = useState<Booking | null>(null)
 
   const onRefresh = useCallback(async () => {
@@ -85,16 +73,13 @@ export default function BookingsScreen() {
           className="flex-1 px-4"
         >
           {sortedBookings.map((booking, index) => {
-            const sc = statusColors[booking.status] || statusColors['Pending']
-            const isExpanded = expandedId === booking.id
-
             return (
               <Animated.View
                 key={booking.id}
                 entering={FadeInDown.delay(index * 50).duration(400)}
               >
                 <TouchableOpacity
-                  onPress={() => setExpandedId(isExpanded ? null : booking.id)}
+                  onPress={() => router.push(`/booking/${booking.id}`)}
                   activeOpacity={0.7}
                   className="bg-white rounded-xl p-4 mb-3"
                   style={shadows.md}
@@ -168,18 +153,6 @@ export default function BookingsScreen() {
                         Rate your partner
                       </Text>
                     </TouchableOpacity>
-                  )}
-
-                  {isExpanded && booking.statusTimeline && (
-                    <View className="mt-4 pt-4 border-t border-gray-100" style={{ maxHeight: 300 }}>
-                      <Text className="text-gray-900 font-semibold mb-4" style={{ fontSize: typography.bodySmall }}>
-                        Booking Timeline
-                      </Text>
-                      <Timeline
-                        steps={booking.statusTimeline}
-                        allStatuses={BOOKING_STATUS_FLOW}
-                      />
-                    </View>
                   )}
                 </TouchableOpacity>
               </Animated.View>

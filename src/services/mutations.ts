@@ -1,5 +1,5 @@
 import { database } from '../config/firebase'
-import { ref, set, push, update, remove, runTransaction } from 'firebase/database'
+import { ref, set, push, update, remove, get, runTransaction } from 'firebase/database'
 import { DB_PATHS, BOOKING_STATUS } from '../config/constants'
 import { Booking, StatusTimelineEntry, Address, Review } from '../types'
 import { createJobRequestForBooking, expireJobRequest } from './jobMatching'
@@ -207,5 +207,70 @@ export const submitReview = async (input: SubmitReviewInput): Promise<void> => {
     })
   } catch (err) {
     console.warn('Failed to update partner rating aggregate', err)
+  }
+}
+
+// ── Chat ─────────────────────────────────────────────────────
+
+export interface SendChatMessageInput {
+  senderId: string
+  senderType: 'user' | 'partner'
+  text: string
+  participants: { userId: string; partnerId: string }
+}
+
+/**
+ * Sends a message in the conversation keyed by the booking id. Creates the
+ * conversation node on the first message and bumps the last-message preview.
+ */
+export const sendChatMessage = async (
+  bookingId: string,
+  input: SendChatMessageInput
+): Promise<string | null> => {
+  const text = input.text.trim()
+  if (!text) return null
+
+  const now = Date.now()
+  const conversationRef = ref(database, `${DB_PATHS.CONVERSATIONS}/${bookingId}`)
+  const messageRef = push(ref(database, `${DB_PATHS.CONVERSATIONS}/${bookingId}/messages`))
+  const message = {
+    senderId: input.senderId,
+    senderType: input.senderType,
+    text,
+    timestamp: now,
+    read: false,
+  }
+
+  await set(messageRef, message)
+  await update(conversationRef, {
+    bookingId,
+    participants: input.participants,
+    lastMessage: text,
+    lastMessageAt: now,
+    lastSenderId: input.senderId,
+    createdAt: now,
+    updatedAt: now,
+  })
+  return messageRef.key
+}
+
+/** Marks all incoming messages from the other participant as read. */
+export const markConversationMessagesRead = async (
+  conversationId: string,
+  bySenderId: string
+): Promise<void> => {
+  const snapshot = await get(ref(database, `${DB_PATHS.CONVERSATIONS}/${conversationId}/messages`))
+  if (!snapshot.exists()) return
+
+  const updates: Record<string, unknown> = {}
+  snapshot.forEach((child) => {
+    const msg = child.val()
+    if (msg.senderId !== bySenderId && !msg.read) {
+      updates[`${child.key}/read`] = true
+    }
+  })
+
+  if (Object.keys(updates).length > 0) {
+    await update(ref(database, `${DB_PATHS.CONVERSATIONS}/${conversationId}/messages`), updates)
   }
 }

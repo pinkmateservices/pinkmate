@@ -207,3 +207,63 @@ export const fetchPartnerById = async (partnerId: string): Promise<Partner | nul
   const snapshot = await get(ref(database, `${DB_PATHS.PARTNERS}/${partnerId}`))
   return snapshot.exists() ? ({ id: partnerId, ...snapshot.val() } as Partner) : null
 }
+
+/**
+ * Live partner subscription. Keeps the whole partner node (including the
+ * partner app's live `currentLocation`) in sync so the customer can track
+ * their assigned partner in real time.
+ */
+export const subscribePartner = (partnerId: string, callback: (partner: Partner | null) => void) => {
+  const dbRef = ref(database, `${DB_PATHS.PARTNERS}/${partnerId}`)
+  const listener = onValue(dbRef, (snapshot) => {
+    callback(snapshot.exists() ? { id: partnerId, ...snapshot.val() } : null)
+  })
+  return () => off(dbRef, 'value', listener)
+}
+
+// ── Chat ─────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string
+  senderId: string
+  senderType: 'user' | 'partner'
+  text: string
+  timestamp: number
+  read: boolean
+}
+
+export interface Conversation {
+  id: string
+  bookingId: string
+  participants: { userId: string; partnerId: string }
+  lastMessage?: string
+  lastMessageAt?: number
+  lastSenderId?: string
+  createdAt: number
+  updatedAt: number
+}
+
+/** Live conversation metadata (last message preview etc.). */
+export const subscribeConversation = (
+  conversationId: string,
+  callback: (conversation: Conversation | null) => void
+) => {
+  const dbRef = ref(database, `${DB_PATHS.CONVERSATIONS}/${conversationId}`)
+  const listener = onValue(dbRef, (snapshot) => {
+    callback(snapshot.exists() ? { id: conversationId, ...snapshot.val() } : null)
+  })
+  return () => off(dbRef, 'value', listener)
+}
+
+/** Live message feed for a conversation, oldest first. */
+export const subscribeConversationMessages = (
+  conversationId: string,
+  callback: (messages: ChatMessage[]) => void
+) => {
+  const dbRef = ref(database, `${DB_PATHS.CONVERSATIONS}/${conversationId}/messages`)
+  const q = query(dbRef, orderByChild('timestamp'))
+  const listener = onValue(q, (snapshot) => {
+    callback(snapshotToArray<ChatMessage>(snapshot))
+  })
+  return () => off(q, 'value', listener)
+}
