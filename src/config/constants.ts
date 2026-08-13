@@ -13,6 +13,7 @@ export const DB_PATHS = {
   FAVORITES: 'favorites',
   REVIEWS: 'reviews',
   JOB_REQUESTS: 'jobRequests',
+  SETTINGS: 'settings',
 } as const
 
 export const BOOKING_STATUS = {

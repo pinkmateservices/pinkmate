@@ -10,31 +10,52 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
 import { ArrowLeft, MapPin, Calendar, Clock, Tag, CreditCard, Trash2, Plus, Minus, CheckCircle } from "lucide-react-native";
 import { colors, typography, shadows } from "../../src/config/theme";
 import { useBookingStore, useAuthStore } from "../../src/store";
-import { useCreateBooking, useCoupons } from "../../src/hooks";
+import { useCreateBooking, useCoupons, useBookingSettings } from "../../src/hooks";
 import { Address } from "../../src/types";
 
-const TIME_SLOTS = [
-  "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-  "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM",
-  "05:00 PM", "06:00 PM", "07:00 PM",
-];
-
-function getNextDays(count: number): { label: string; value: string }[] {
+function getNextDays(count: number, workingDays: number[]): { label: string; value: string }[] {
   const days = [];
-  for (let i = 0; i < count; i++) {
+  let i = 0;
+  while (days.length < count) {
     const d = new Date();
     d.setDate(d.getDate() + i);
+    i += 1;
+    // 0 = Sunday … 6 = Saturday (JS getDay())
+    if (!workingDays.includes(d.getDay())) continue;
     const value = d.toISOString().split("T")[0];
-    const label = i === 0 ? "Today" : i === 1 ? "Tomorrow"
+    const label = i - 1 === 0 ? "Today" : i - 1 === 1 ? "Tomorrow"
       : d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
     days.push({ label, value });
   }
   return days;
+}
+
+// Converts "09:00 AM" / "06:30 PM" to minutes since midnight.
+function slotToMinutes(slot: string): number {
+  const match = slot.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return -1;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const meridian = match[3].toUpperCase();
+  if (meridian === "PM" && hours !== 12) hours += 12;
+  if (meridian === "AM" && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+// A slot has already passed if its date is today and its time is earlier
+// than the current time (allowing a small grace window for the current hour).
+function isSlotPassed(dateValue: string, slot: string): boolean {
+  const today = new Date().toISOString().split("T")[0];
+  if (dateValue !== today) return false;
+  const slotMin = slotToMinutes(slot);
+  if (slotMin < 0) return false;
+  const now = new Date();
+  return slotMin < now.getHours() * 60 + now.getMinutes();
 }
 
 // Strips undefined values so Firebase doesn't reject the payload
@@ -58,12 +79,19 @@ export default function BookingScreen() {
 
   const { data: coupons = [] } = useCoupons();
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
+  const { settings: bookingSettings } = useBookingSettings();
 
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const days = useMemo(() => getNextDays(7), []);
+  const timeSlots = bookingSettings.timeSlots;
+  const days = useMemo(() => getNextDays(7, bookingSettings.workingDays), [bookingSettings.workingDays]);
+
+  useEffect(() => {
+    if (scheduledTime && !timeSlots.includes(scheduledTime)) setTime("");
+    if (scheduledDate && !days.some((d) => d.value === scheduledDate)) setDate("");
+  }, [timeSlots, days, scheduledTime, scheduledDate, setTime, setDate]);
   const subtotal = getSubtotal();
   const discount = getDiscount();
   const total = getTotal();
@@ -215,14 +243,18 @@ export default function BookingScreen() {
             <Text className="font-bold text-gray-900" style={{ fontSize: typography.body }}>Select Time</Text>
           </View>
           <View className="flex-row flex-wrap gap-2">
-            {TIME_SLOTS.map((slot) => (
-              <TouchableOpacity key={slot} onPress={() => setTime(slot)}
-                className={`px-3 py-2 rounded-xl border ${scheduledTime === slot ? "bg-pink-500 border-pink-500" : "bg-white border-gray-200"}`}>
-                <Text className={`font-medium ${scheduledTime === slot ? "text-white" : "text-gray-700"}`} style={{ fontSize: typography.caption }}>
-                  {slot}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {timeSlots.map((slot) => {
+              const passed = isSlotPassed(scheduledDate ?? "", slot);
+              const selected = scheduledTime === slot;
+              return (
+                <TouchableOpacity key={slot} onPress={() => setTime(slot)} disabled={passed}
+                  className={`px-3 py-2 rounded-xl border ${selected ? "bg-pink-500 border-pink-500" : passed ? "bg-gray-100 border-gray-100" : "bg-white border-gray-200"}`}>
+                  <Text className={`font-medium ${selected ? "text-white" : passed ? "text-gray-300" : "text-gray-700"}`} style={{ fontSize: typography.caption }}>
+                    {slot}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
