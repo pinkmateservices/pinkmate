@@ -37,6 +37,7 @@ export interface Booking {
   paymentStatus: 'Pending' | 'Paid' | 'Failed' | 'Refunded'
   notes?: string
   statusTimeline: StatusTimelineEntry[]
+  customerOtp?: string
   createdAt: number
   updatedAt: number
 }

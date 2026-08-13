@@ -130,6 +130,20 @@ export default function BookingsScreen() {
                     </Text>
                   </View>
 
+                  {(booking.status === 'On The Way' || booking.status === 'Service Started') && booking.customerOtp && (
+                    <View className="mt-3 p-3 rounded-xl items-center border border-pink-100 bg-pink-50">
+                      <Text className="text-gray-600" style={{ fontSize: typography.caption }}>
+                        Share this code with your partner
+                      </Text>
+                      <Text className="text-pink-600 font-bold tracking-[8px] my-1" style={{ fontSize: 32 }}>
+                        {booking.customerOtp}
+                      </Text>
+                      <Text className="text-gray-400 text-center" style={{ fontSize: typography.caption }}>
+                        Your partner will ask for this to complete the job.
+                      </Text>
+                    </View>
+                  )}
+
                   <View className="flex-row items-center justify-between mt-2 pt-3 border-t border-gray-100">
                     <Text className="text-gray-900 font-bold" style={{ fontSize: typography.body }}>
                       ₹{booking.finalAmount}

@@ -2,6 +2,12 @@ import { database } from '../config/firebase'
 import { ref, set, push, update, remove } from 'firebase/database'
 import { DB_PATHS, BOOKING_STATUS } from '../config/constants'
 import { Booking, StatusTimelineEntry, Address } from '../types'
+import { createJobRequestForBooking, expireJobRequest } from './jobMatching'
+
+/** Generates a 4-digit completion code shown to the customer in their app. */
+export const generateCustomerOtp = (): string => {
+  return String(Math.floor(1000 + Math.random() * 9000))
+}
 
 export const createBooking = async (
   userId: string,
@@ -18,18 +24,29 @@ export const createBooking = async (
     },
   ]
 
-  const booking = {
+  const booking: Booking = {
+    id: bookingRef.key as string,
     ...bookingData,
     userId,
     status: BOOKING_STATUS.PENDING,
     paymentStatus: 'Pending',
     statusTimeline: timeline,
+    customerOtp: generateCustomerOtp(),
     createdAt: now,
     updatedAt: now,
   }
 
   await set(bookingRef, booking)
-  return bookingRef.key as string
+
+  // Publish the broadcast job request so matching partners receive it in real
+  // time. Best-effort: a failure here must never fail the booking itself.
+  try {
+    await createJobRequestForBooking(booking)
+  } catch (err) {
+    console.warn('Failed to publish job request', err)
+  }
+
+  return booking.id
 }
 
 export const updateBookingStatus = async (
@@ -63,6 +80,11 @@ export const updateBookingStatus = async (
 
 export const cancelBooking = async (bookingId: string, reason?: string) => {
   await updateBookingStatus(bookingId, BOOKING_STATUS.CANCELLED, reason)
+  try {
+    await expireJobRequest(bookingId)
+  } catch (err) {
+    console.warn('Failed to expire job request', err)
+  }
 }
 
 export const saveAddress = async (

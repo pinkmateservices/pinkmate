@@ -12,6 +12,7 @@ export const DB_PATHS = {
   ADDRESSES: 'addresses',
   FAVORITES: 'favorites',
   REVIEWS: 'reviews',
+  JOB_REQUESTS: 'jobRequests',
 } as const
 
 export const BOOKING_STATUS = {
@@ -53,3 +54,12 @@ export const BOOKING_STATUS_FLOW = [
   BOOKING_STATUS.SERVICE_STARTED,
   BOOKING_STATUS.COMPLETED,
 ] as const
+
+export const JOB_REQUEST_STATUS = {
+  OPEN: 'open',
+  ASSIGNED: 'assigned',
+  EXPIRED: 'expired',
+} as const
+
+/** Seconds a partner has to accept a broadcast job before it is expired. */
+export const ACCEPT_COUNTDOWN_SECONDS = 45

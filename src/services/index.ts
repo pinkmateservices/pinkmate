@@ -16,3 +16,4 @@ export {
   toggleFavorite,
   markNotificationRead, markAllNotificationsRead,
 } from './mutations'
+export { createJobRequestForBooking, expireJobRequest } from './jobMatching'
