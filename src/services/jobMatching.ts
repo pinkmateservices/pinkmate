@@ -2,6 +2,7 @@ import { database } from '../config/firebase'
 import { ref, get, set, update } from 'firebase/database'
 import { DB_PATHS, JOB_REQUEST_STATUS, ACCEPT_COUNTDOWN_SECONDS } from '../config/constants'
 import { Booking, JobRequest, JobRequestPreview } from '../types'
+import { removeUndefined } from '../utils/sanitize'
 
 /**
  * Publishes a broadcast job request for a freshly placed booking.
@@ -42,6 +43,7 @@ function buildPreview(booking: Booking, categoryIds: string[]): JobRequestPrevie
       longitude: booking.address?.longitude ?? 0,
     },
     distanceKm: 0,
+    notes: booking.notes,
   }
 }
 
@@ -71,7 +73,7 @@ export async function createJobRequestForBooking(
     preview: buildPreview(booking, categoryIds),
   }
 
-  await set(requestRef, jobRequest)
+  await set(requestRef, removeUndefined(jobRequest))
   return { id: booking.id, ...jobRequest }
 }
 

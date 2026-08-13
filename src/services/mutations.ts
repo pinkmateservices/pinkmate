@@ -1,8 +1,9 @@
 import { database } from '../config/firebase'
-import { ref, set, push, update, remove } from 'firebase/database'
+import { ref, set, push, update, remove, runTransaction } from 'firebase/database'
 import { DB_PATHS, BOOKING_STATUS } from '../config/constants'
-import { Booking, StatusTimelineEntry, Address } from '../types'
+import { Booking, StatusTimelineEntry, Address, Review } from '../types'
 import { createJobRequestForBooking, expireJobRequest } from './jobMatching'
+import { removeUndefined } from '../utils/sanitize'
 
 /** Generates a 4-digit completion code shown to the customer in their app. */
 export const generateCustomerOtp = (): string => {
@@ -36,7 +37,7 @@ export const createBooking = async (
     updatedAt: now,
   }
 
-  await set(bookingRef, booking)
+  await set(bookingRef, removeUndefined(booking))
 
   // Publish the broadcast job request so matching partners receive it in real
   // time. Best-effort: a failure here must never fail the booking itself.
@@ -154,5 +155,57 @@ export const markAllNotificationsRead = async (userId: string) => {
 
   if (Object.keys(updates).length > 0) {
     await update(ref(database, DB_PATHS.NOTIFICATIONS), updates)
+  }
+}
+
+export interface SubmitReviewInput {
+  userId: string
+  partnerId: string
+  bookingId: string
+  rating: number
+  comment?: string
+  userName?: string
+  userPhotoUrl?: string
+  serviceNames?: string[]
+}
+
+/**
+ * Writes a customer review keyed by booking (one review per booking) and
+ * best-effort rolls the rating into the partner's running average. The review
+ * write is the source of truth — the partner-side aggregate is derived from
+ * the reviews collection, so a blocked cross-user write must never fail the
+ * submission.
+ */
+export const submitReview = async (input: SubmitReviewInput): Promise<void> => {
+  const now = Date.now()
+  const review: Omit<Review, 'id'> = {
+    userId: input.userId,
+    partnerId: input.partnerId,
+    bookingId: input.bookingId,
+    rating: input.rating,
+    comment: input.comment,
+    userName: input.userName,
+    userPhotoUrl: input.userPhotoUrl,
+    serviceNames: input.serviceNames,
+    createdAt: now,
+  }
+
+  await set(ref(database, `${DB_PATHS.REVIEWS}/${input.bookingId}`), removeUndefined(review))
+
+  try {
+    const partnerRef = ref(database, `${DB_PATHS.PARTNERS}/${input.partnerId}`)
+    await runTransaction(partnerRef, (partner) => {
+      if (!partner) return
+      const ratingCount = (partner.ratingCount ?? 0) + 1
+      const rating = Math.round(((partner.rating ?? 0) * (partner.ratingCount ?? 0) + input.rating) / ratingCount * 10) / 10
+      return {
+        ...partner,
+        rating,
+        ratingCount,
+        updatedAt: now,
+      }
+    })
+  } catch (err) {
+    console.warn('Failed to update partner rating aggregate', err)
   }
 }

@@ -11,6 +11,8 @@ import {
   Booking,
   Address,
   AppNotification,
+  Review,
+  Partner,
 } from '../types'
 
 const snapshotToArray = <T>(snapshot: DataSnapshot): T[] => {
@@ -194,4 +196,14 @@ export const fetchAddOnsByIds = async (ids: string[]): Promise<AddOn[]> => {
     })
   )
   return results.filter(Boolean) as AddOn[]
+}
+
+export const fetchReviewByBooking = async (bookingId: string): Promise<Review | null> => {
+  const snapshot = await get(ref(database, `${DB_PATHS.REVIEWS}/${bookingId}`))
+  return snapshot.exists() ? ({ id: bookingId, ...snapshot.val() } as Review) : null
+}
+
+export const fetchPartnerById = async (partnerId: string): Promise<Partner | null> => {
+  const snapshot = await get(ref(database, `${DB_PATHS.PARTNERS}/${partnerId}`))
+  return snapshot.exists() ? ({ id: partnerId, ...snapshot.val() } as Partner) : null
 }

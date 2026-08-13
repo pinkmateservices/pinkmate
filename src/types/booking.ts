@@ -22,6 +22,7 @@ export interface Booking {
   id: string
   userId: string
   partnerId?: string
+  assignedPartnerId?: string
   items: BookingItem[]
   totalAmount: number
   discountAmount: number

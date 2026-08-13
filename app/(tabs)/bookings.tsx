@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { colors, typography, shadows } from '../../src/config/theme'
 import { useBookings } from '../../src/hooks'
-import { EmptyState, Skeleton, Badge, Timeline } from '../../src/components/ui'
-import { Calendar, Clock, MapPin, ChevronRight } from 'lucide-react-native'
+import { EmptyState, Skeleton, Badge, Timeline, RatePartnerModal } from '../../src/components/ui'
+import { Calendar, Clock, MapPin, ChevronRight, Star } from 'lucide-react-native'
 import { useState, useMemo, useCallback } from 'react'
 import { Booking, BookingStatus } from '../../src/types'
 import { BOOKING_STATUS_FLOW } from '../../src/config/constants'
@@ -26,6 +26,7 @@ export default function BookingsScreen() {
   const { data: bookings, isLoading, refetch } = useBookings()
   const [refreshing, setRefreshing] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<Booking | null>(null)
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -156,6 +157,19 @@ export default function BookingsScreen() {
                     </View>
                   </View>
 
+                  {booking.status === 'Completed' && booking.assignedPartnerId && (
+                    <TouchableOpacity
+                      onPress={() => setReviewTarget(booking)}
+                      className="mt-3 flex-row items-center justify-center rounded-xl py-2.5 border border-pink-200 bg-pink-50"
+                      activeOpacity={0.7}
+                    >
+                      <Star size={15} color={colors.accent} fill={colors.accent} />
+                      <Text className="text-pink-600 font-semibold ml-2" style={{ fontSize: typography.bodySmall }}>
+                        Rate your partner
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
                   {isExpanded && booking.statusTimeline && (
                     <View className="mt-4 pt-4 border-t border-gray-100" style={{ maxHeight: 300 }}>
                       <Text className="text-gray-900 font-semibold mb-4" style={{ fontSize: typography.bodySmall }}>
@@ -174,6 +188,12 @@ export default function BookingsScreen() {
           <View className="h-8" />
         </ScrollView>
       )}
+
+      <RatePartnerModal
+        booking={reviewTarget}
+        visible={!!reviewTarget}
+        onClose={() => setReviewTarget(null)}
+      />
     </View>
   )
 }

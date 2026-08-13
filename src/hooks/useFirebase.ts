@@ -5,7 +5,8 @@ import * as mutations from '../services/mutations'
 import { useAuthStore } from '../store'
 import { useFavoritesStore } from '../store/favoritesStore'
 import { fetchFavoriteIds } from '../services/database'
-import type { Booking } from '../types'
+import type { Booking, Review } from '../types'
+import type { SubmitReviewInput } from '../services/mutations'
 
 export const useCategories = () => {
   return useQuery({
@@ -195,5 +196,41 @@ export const useAddOns = (ids: string[]) => {
     queryFn: () => db.fetchAddOnsByIds(ids),
     enabled: ids.length > 0,
     staleTime: 10 * 60 * 1000,
+  })
+}
+
+export const useReviewForBooking = (bookingId: string) => {
+  return useQuery<Review | null>({
+    queryKey: ['reviews', 'booking', bookingId],
+    queryFn: () => db.fetchReviewByBooking(bookingId),
+    enabled: !!bookingId,
+  })
+}
+
+export const usePartnerById = (partnerId: string) => {
+  return useQuery({
+    queryKey: ['partners', partnerId],
+    queryFn: () => db.fetchPartnerById(partnerId),
+    enabled: !!partnerId,
+  })
+}
+
+export const useSubmitReview = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: Omit<SubmitReviewInput, 'userId'>) => {
+      const user = useAuthStore.getState().user
+      return mutations.submitReview({
+        ...input,
+        userId: user!.id,
+        userName: user?.fullName,
+        userPhotoUrl: user?.photoURL,
+      })
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'booking', variables.bookingId] })
+      queryClient.invalidateQueries({ queryKey: ['partners', variables.partnerId] })
+    },
   })
 }

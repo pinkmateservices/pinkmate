@@ -19,6 +19,8 @@ export interface JobRequestPreview {
   }
   /** Distance from the nearest partner (overridden per-partner in the feed). */
   distanceKm: number
+  /** Customer instructions added at checkout. */
+  notes?: string
 }
 
 export interface JobRequest {
