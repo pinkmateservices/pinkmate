@@ -5,6 +5,7 @@ export const DB_PATHS = {
   SERVICES: 'services',
   ADDONS: 'addons',
   BANNERS: 'banners',
+  TESTIMONIALS: 'testimonials',
   COUPONS: 'coupons',
   PARTNERS: 'partners',
   BOOKINGS: 'bookings',

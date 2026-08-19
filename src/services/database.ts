@@ -13,6 +13,7 @@ import {
   AppNotification,
   Review,
   Partner,
+  Testimonial,
 } from '../types'
 
 const snapshotToArray = <T>(snapshot: DataSnapshot): T[] => {
@@ -104,6 +105,22 @@ export const subscribeBanners = (callback: (banners: Banner[]) => void) => {
   const q = query(dbRef, orderByChild('displayOrder'))
   const listener = onValue(q, (snapshot) => {
     callback(snapshotToArray<Banner>(snapshot))
+  })
+  return () => off(q, 'value', listener)
+}
+
+export const fetchTestimonials = async (): Promise<Testimonial[]> => {
+  const snapshot = await get(
+    query(ref(database, DB_PATHS.TESTIMONIALS), orderByChild('displayOrder'))
+  )
+  return snapshotToArray<Testimonial>(snapshot)
+}
+
+export const subscribeTestimonials = (callback: (testimonials: Testimonial[]) => void) => {
+  const dbRef = ref(database, DB_PATHS.TESTIMONIALS)
+  const q = query(dbRef, orderByChild('displayOrder'))
+  const listener = onValue(q, (snapshot) => {
+    callback(snapshotToArray<Testimonial>(snapshot))
   })
   return () => off(q, 'value', listener)
 }

@@ -4,5 +4,7 @@ export interface Testimonial {
   location: string;
   rating: number;
   text: string;
-  avatar: string;
+  avatar?: string;
+  active?: boolean;
+  displayOrder?: number;
 }

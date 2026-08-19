@@ -4,6 +4,7 @@ export {
   fetchSubCategories, subscribeSubCategories,
   fetchServices, fetchServicesByCategory, fetchServiceById, subscribeServices,
   fetchBanners, subscribeBanners,
+  fetchTestimonials, subscribeTestimonials,
   fetchCoupons, fetchCouponByCode,
   fetchBookings, subscribeBookings, fetchBookingById, subscribeBooking,
   fetchAddresses, subscribeAddresses,

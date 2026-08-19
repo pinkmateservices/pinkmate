@@ -5,7 +5,7 @@ import * as mutations from '../services/mutations'
 import { useAuthStore } from '../store'
 import { useFavoritesStore } from '../store/favoritesStore'
 import { fetchFavoriteIds } from '../services/database'
-import type { Booking, Review, Partner } from '../types'
+import type { Booking, Review, Partner, Testimonial } from '../types'
 import type { SubmitReviewInput } from '../services/mutations'
 
 export const useCategories = () => {
@@ -65,6 +65,22 @@ export const useBanners = () => {
     queryFn: db.fetchBanners,
     staleTime: 10 * 60 * 1000,
   })
+}
+
+export const useTestimonials = () => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    const unsubscribe = db.subscribeTestimonials((data) => {
+      setTestimonials(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [])
+
+  return { data: testimonials, isLoading: loading }
 }
 
 export const useCoupons = () => {

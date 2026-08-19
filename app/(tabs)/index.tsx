@@ -18,6 +18,7 @@ import {
   useBanners,
   useServices,
   useFavorites,
+  useTestimonials,
 } from "../../src/hooks";
 import {
   SearchBar,
@@ -98,8 +99,17 @@ export default function HomeScreen() {
   const { data: categories, isLoading: catLoading } = useCategories();
   const { data: banners, isLoading: bannerLoading } = useBanners();
   const { data: allServices, isLoading: servicesLoading } = useServices();
+  const { data: dbTestimonials = [] } = useTestimonials();
 
   useFavorites();
+
+  const testimonials = useMemo(
+    () =>
+      dbTestimonials.length > 0
+        ? dbTestimonials.filter((t) => t.active !== false)
+        : TESTIMONIALS,
+    [dbTestimonials],
+  );
 
   const featuredCategories = useMemo(
     () => categories?.filter((c) => c.featured && c.status === "Active") || [],
@@ -502,7 +512,7 @@ export default function HomeScreen() {
         )}
 
         {/* Testimonials */}
-        <TestimonialsSection TESTIMONIALS={TESTIMONIALS} />
+        {testimonials.length > 0 && <TestimonialsSection TESTIMONIALS={testimonials} />}
 
         {!catLoading &&
           !servicesLoading &&

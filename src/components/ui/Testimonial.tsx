@@ -35,6 +35,7 @@ export default function TestimonialsSection({
   });
 
   useEffect(() => {
+    if (!TESTIMONIALS.length) return;
     const interval = setInterval(() => {
       currentIndex.current = (currentIndex.current + 1) % TESTIMONIALS.length;
       flatRef.current?.scrollToIndex({
@@ -43,7 +44,9 @@ export default function TestimonialsSection({
       });
     }, 3500);
     return () => clearInterval(interval);
-  }, []);
+  }, [TESTIMONIALS.length]);
+
+  if (!TESTIMONIALS.length) return null;
 
   return (
     <View style={{ marginBottom: 24 }}>
@@ -84,7 +87,7 @@ export default function TestimonialsSection({
                 marginBottom: 4,
               }}
             >
-              "
+              {'\u201C'}
             </Text>
             <Text
               className="text-gray-600 leading-5"
@@ -106,11 +109,19 @@ export default function TestimonialsSection({
             </View>
             {/* Author */}
             <View className="flex-row items-center">
-              <Image
-                source={{ uri: item.avatar }}
-                style={styles.avatar}
-                contentFit="cover"
-              />
+              {item.avatar ? (
+                <Image
+                  source={{ uri: item.avatar }}
+                  style={styles.avatar}
+                  contentFit="cover"
+                />
+              ) : (
+                <View className="w-10 h-10 rounded-full bg-pink-100 items-center justify-center">
+                  <Text className="text-pink-600 font-bold" style={{ fontSize: typography.bodySmall }}>
+                    {item.name?.charAt(0).toUpperCase() ?? 'P'}
+                  </Text>
+                </View>
+              )}
               <View className="ml-3">
                 <Text
                   className="font-semibold text-gray-900"
