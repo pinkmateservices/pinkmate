@@ -15,6 +15,7 @@ export const DB_PATHS = {
   JOB_REQUESTS: 'jobRequests',
   SETTINGS: 'settings',
   CONVERSATIONS: 'conversations',
+  SUPPORT_TICKETS: 'supportTickets',
 } as const
 
 export const BOOKING_STATUS = {

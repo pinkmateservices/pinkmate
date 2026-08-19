@@ -15,5 +15,6 @@ export {
   saveAddress, updateAddress, deleteAddress,
   toggleFavorite,
   markNotificationRead, markAllNotificationsRead,
+  submitSupportTicket,
 } from './mutations'
 export { createJobRequestForBooking, expireJobRequest } from './jobMatching'

@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors, typography, shadows } from '../../src/config/theme'
 import { useAuthStore } from '../../src/store'
 import {
-  User, MapPin, Heart, Bell, Shield, FileText, LogOut, ChevronRight,
-  Star, Package, HelpCircle, LogIn, UserPlus, Camera, X, Check,
+  User, Bell, Shield, FileText, LogOut, ChevronRight,
+  Star, HelpCircle, LogIn, UserPlus, Camera, X, Check,
 } from 'lucide-react-native'
 import { Image } from 'expo-image'
 import Animated, { FadeInDown } from 'react-native-reanimated'
@@ -16,10 +16,7 @@ import { LocationPicker } from '../../src/components/ui'
 import { useIndiaStates, useIndiaCities } from '../../src/hooks/useLocation'
 
 const menuItems = [
-  { icon: Package, label: 'Booking History', screen: '/orders', color: '#8B5CF6' },
-  { icon: Heart, label: 'Favorites', screen: '/profile/favorites', color: '#EC4899' },
   { icon: Bell, label: 'Notifications', screen: '/profile/notifications', color: '#F59E0B' },
-  { icon: MapPin, label: 'Saved Addresses', screen: '/profile/addresses', color: '#3B82F6' },
   { icon: HelpCircle, label: 'Help & Support', screen: '/profile/support', color: '#10B981' },
   { icon: Shield, label: 'Privacy Policy', screen: '/profile/privacy', color: '#6B7280' },
   { icon: FileText, label: 'Terms & Conditions', screen: '/profile/terms', color: '#6B7280' },

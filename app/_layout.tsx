@@ -74,6 +74,7 @@ export default function RootLayout() {
           <Stack.Screen name="booking/chat/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="booking" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
           <Stack.Screen name="orders/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name="profile/support" options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack>
       </AuthGate>
     </QueryClientProvider>

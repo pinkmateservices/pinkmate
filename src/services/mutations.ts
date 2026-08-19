@@ -158,6 +158,28 @@ export const markAllNotificationsRead = async (userId: string) => {
   }
 }
 
+export interface SupportTicketInput {
+  userId: string
+  userName?: string
+  userEmail?: string
+  subject: string
+  message: string
+}
+
+/** Stores a customer support ticket so the admin can follow up. */
+export const submitSupportTicket = async (input: SupportTicketInput): Promise<string> => {
+  const now = Date.now()
+  const ticketRef = push(ref(database, DB_PATHS.SUPPORT_TICKETS))
+  const ticket = {
+    ...input,
+    status: 'open',
+    createdAt: now,
+    updatedAt: now,
+  }
+  await set(ticketRef, removeUndefined(ticket))
+  return ticketRef.key as string
+}
+
 export interface SubmitReviewInput {
   userId: string
   partnerId: string
