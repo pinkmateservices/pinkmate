@@ -11,7 +11,7 @@ import {
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, typography } from "../../src/config/theme";
+import { colors, typography, shadows } from "../../src/config/theme";
 import { useAuthStore, useBookingStore } from "../../src/store";
 import {
   useCategories,
@@ -33,7 +33,7 @@ import {
   BannerCarouselSkeleton,
 } from "../../src/components/ui/BannerCarousel";
 import { useState, useCallback, useMemo } from "react";
-import { MapPin, Sparkles, ChevronRight } from "lucide-react-native";
+import { MapPin, Sparkles, ChevronRight, SearchX } from "lucide-react-native";
 import TestimonialsSection from "@/src/components/ui/Testimonial";
 import { Testimonial } from "@/src/types";
 import LocationPickerModal from "@/src/components/ui/LocationPickerModal";
@@ -110,6 +110,56 @@ export default function HomeScreen() {
     () => allServices?.filter((s) => s.status === "Active").slice(0, 6) || [],
     [allServices],
   );
+
+  const query = search.trim().toLowerCase();
+
+  const activeCategories = useMemo(
+    () => categories?.filter((c) => c.status === "Active") || [],
+    [categories],
+  );
+
+  const activeServices = useMemo(
+    () => allServices?.filter((s) => s.status === "Active") || [],
+    [allServices],
+  );
+
+  const searchActive = query.length > 0;
+
+  const searchResults = useMemo(() => {
+    if (!query) return { categories: [], services: [] };
+    return {
+      categories: activeCategories.filter((c) =>
+        c.name.toLowerCase().includes(query),
+      ),
+      services: activeServices.filter(
+        (s) =>
+          s.name.toLowerCase().includes(query) ||
+          s.shortDescription?.toLowerCase().includes(query) ||
+          s.categoryId === query,
+      ),
+    };
+  }, [query, activeCategories, activeServices]);
+
+  const goToCategory = useCallback(
+    (categoryId: string) => {
+      setSearch("");
+      router.push(`/category/${categoryId}`);
+    },
+    [router],
+  );
+
+  const goToService = useCallback(
+    (serviceId: string) => {
+      setSearch("");
+      router.push(`/service-details/${serviceId}`);
+    },
+    [router],
+  );
+
+  const servicePrice = (s: { basePrice: number; discountPrice: number }) =>
+    s.discountPrice && s.discountPrice < s.basePrice
+      ? s.discountPrice
+      : s.basePrice;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -220,6 +270,126 @@ export default function HomeScreen() {
           />
         </View>
 
+        {searchActive ? (
+          <View className="px-4 pb-8">
+            {searchResults.categories.length > 0 && (
+              <>
+                <Text
+                  className="text-gray-900 font-semibold px-2 mb-3"
+                  style={{ fontSize: typography.h4 }}
+                >
+                  Categories
+                </Text>
+                {searchResults.categories.map((c) => (
+                  <TouchableOpacity
+                    key={c.id}
+                    onPress={() => goToCategory(c.id)}
+                    activeOpacity={0.7}
+                    className="bg-white rounded-xl p-3 flex-row items-center mb-2.5"
+                    style={{
+                      ...shadows.sm,
+                      borderWidth: 0,
+                      backgroundColor: colors.surface,
+                    }}
+                  >
+                    {c.image ? (
+                      <Image
+                        source={{ uri: c.image }}
+                        style={{ width: 44, height: 44, borderRadius: 10 }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View className="w-11 h-11 rounded-xl bg-pink-100 items-center justify-center">
+                        <Sparkles size={20} color={colors.primary} />
+                      </View>
+                    )}
+                    <View className="flex-1 ml-3">
+                      <Text
+                        className="text-gray-900 font-semibold"
+                        style={{ fontSize: typography.body }}
+                      >
+                        {c.name}
+                      </Text>
+                      {c.description ? (
+                        <Text
+                          className="text-gray-400 mt-0.5"
+                          style={{ fontSize: typography.caption }}
+                          numberOfLines={1}
+                        >
+                          {c.description}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <ChevronRight size={18} color={colors.textTertiary} />
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {searchResults.services.length > 0 && (
+              <>
+                <Text
+                  className="text-gray-900 font-semibold px-2 mb-3 mt-4"
+                  style={{ fontSize: typography.h4 }}
+                >
+                  Services
+                </Text>
+                {searchResults.services.map((s) => (
+                  <TouchableOpacity
+                    key={s.id}
+                    onPress={() => goToService(s.id)}
+                    activeOpacity={0.7}
+                    className="bg-white rounded-xl p-3 flex-row items-center mb-2.5"
+                    style={shadows.sm}
+                  >
+                    {s.thumbnail ? (
+                      <Image
+                        source={{ uri: s.thumbnail }}
+                        style={{ width: 44, height: 44, borderRadius: 10 }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View className="w-11 h-11 rounded-xl bg-pink-100 items-center justify-center">
+                        <Sparkles size={20} color={colors.primary} />
+                      </View>
+                    )}
+                    <View className="flex-1 ml-3">
+                      <Text
+                        className="text-gray-900 font-semibold"
+                        style={{ fontSize: typography.body }}
+                      >
+                        {s.name}
+                      </Text>
+                      <Text
+                        className="text-gray-400 mt-0.5"
+                        style={{ fontSize: typography.caption }}
+                        numberOfLines={1}
+                      >
+                        {s.shortDescription}
+                      </Text>
+                    </View>
+                    <Text
+                      className="text-primary font-bold"
+                      style={{ fontSize: typography.body }}
+                    >
+                      ₹{servicePrice(s)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {searchResults.categories.length === 0 &&
+              searchResults.services.length === 0 && (
+                <EmptyState
+                  icon={<SearchX size={48} color={colors.primary} />}
+                  title="No results found"
+                  description={`No categories or services match "${search.trim()}". Try a different search.`}
+                />
+              )}
+          </View>
+        ) : (
+        <>
         {bannerLoading ? (
           <BannerCarouselSkeleton />
         ) : banners && banners.filter((b) => b.active).length > 0 ? (
@@ -353,6 +523,8 @@ export default function HomeScreen() {
             Made with <Text className="text-primary">♥</Text> by Team Pinkmate
           </Text>
         </View>
+        </>
+        )}
       </ScrollView>
 
       <LocationPickerModal
