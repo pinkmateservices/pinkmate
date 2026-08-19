@@ -16,6 +16,12 @@ export interface BookingItem {
   serviceName: string
   quantity: number
   price: number
+  selectedAddOns?: {
+    addOnId: string
+    name: string
+    price: number
+    duration: number
+  }[]
 }
 
 export interface Booking {

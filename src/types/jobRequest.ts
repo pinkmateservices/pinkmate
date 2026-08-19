@@ -8,6 +8,8 @@ export interface JobRequestPreview {
   serviceNames: string[]
   /** Category ids of the booked services — used for partner skill matching. */
   categoryIds: string[]
+  /** Names of any add-ons the customer selected, so partners can see them. */
+  addOnNames?: string[]
   totalAmount: number
   scheduledDate: string
   scheduledTime: string

@@ -137,6 +137,7 @@ export default function BookingScreen() {
           serviceName: i.serviceName,
           quantity: i.quantity,
           price: i.price,
+          selectedAddOns: i.selectedAddOns,
         })),
         totalAmount: subtotal,
         discountAmount: discount,

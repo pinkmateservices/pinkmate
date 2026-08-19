@@ -33,6 +33,7 @@ function buildPreview(booking: Booking, categoryIds: string[]): JobRequestPrevie
   return {
     serviceNames: booking.items.map((i) => i.serviceName),
     categoryIds,
+    addOnNames: booking.items.flatMap((i) => i.selectedAddOns ?? []).map((a) => a.name),
     totalAmount: booking.finalAmount,
     scheduledDate: booking.scheduledDate,
     scheduledTime: booking.scheduledTime,

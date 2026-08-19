@@ -391,13 +391,29 @@ export default function BookingDetailsScreen() {
             Services
           </Text>
           {booking.items?.map((item) => (
-            <View key={item.serviceId} className="flex-row items-center justify-between mb-2">
-              <Text className="text-gray-700 flex-1" style={{ fontSize: typography.bodySmall }}>
-                {item.serviceName} {item.quantity > 1 ? `× ${item.quantity}` : ''}
-              </Text>
-              <Text className="text-gray-900 font-semibold" style={{ fontSize: typography.bodySmall }}>
-                ₹{item.price * item.quantity}
-              </Text>
+            <View key={item.serviceId} className="mb-2">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-gray-700 flex-1" style={{ fontSize: typography.bodySmall }}>
+                  {item.serviceName} {item.quantity > 1 ? `× ${item.quantity}` : ''}
+                </Text>
+                <Text className="text-gray-900 font-semibold" style={{ fontSize: typography.bodySmall }}>
+                  ₹{item.price * item.quantity}
+                </Text>
+              </View>
+              {item.selectedAddOns && item.selectedAddOns.length > 0 && (
+                <View className="mt-1">
+                  {item.selectedAddOns.map((a) => (
+                    <View key={a.addOnId} className="flex-row items-center justify-between ml-3">
+                      <Text className="text-gray-400 flex-1" style={{ fontSize: typography.caption }}>
+                        + {a.name}
+                      </Text>
+                      <Text className="text-gray-400" style={{ fontSize: typography.caption }}>
+                        ₹{a.price * item.quantity}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           ))}
 
